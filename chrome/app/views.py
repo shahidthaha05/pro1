@@ -87,7 +87,6 @@ def add_prod(req):
             ofr_price=req.POST['ofr_price']
             dis=req.POST['dis']
             img=req.FILES['img']
-            size = req.POST['size']
             data=Product.objects.create(pro_id=prd_id,name=prd_name,price=prd_price,offer_price=ofr_price,dis=dis,img=img)
             data.save()
             return redirect(add_prod)
