@@ -3,12 +3,18 @@ from django.contrib.auth.models import User
 
 
 class Product(models.Model):
+    SIZE_CHOICES = [
+        ('S', 'Small'),
+        ('M', 'Medium'),
+        ('L', 'Large'),
+    ]
     pro_id=models.TextField()
     name=models.TextField()
     price=models.IntegerField()
     offer_price=models.IntegerField()
     img=models.FileField()
     dis=models.TextField()
+    size = models.CharField(max_length=1, choices=SIZE_CHOICES)
     
 
 
