@@ -15,8 +15,8 @@
             box-sizing: border-box;
         }
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: whitesmoke;
+            font-family: 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f2f2f2;  /* Light gray background */
             display: flex;
             justify-content: center;
             align-items: center;
@@ -24,47 +24,55 @@
         }
 
         .container {
-            background-color: black;
+            background-color: white;
             width: 100%;
-            max-width: 400px;
+            max-width: 380px;
             padding: 40px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
             border-radius: 8px;
+            text-align: center;
         }
 
         h2 {
-            text-align: center;
-            margin-bottom: 20px;
+            font-size: 2rem;
+            font-weight: 600;
             color: #333;
+            margin-bottom: 20px;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            margin-bottom: 25px;
         }
 
         label {
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
+            font-weight: 500;
             color: #555;
+            text-align: left;
         }
 
         input[type="text"], input[type="email"], input[type="password"] {
             width: 100%;
-            padding: 10px;
-            font-size: 14px;
-            border: 1px solid #ccc;
+            padding: 15px;
+            font-size: 16px;
+            border: 1px solid #ddd;
             border-radius: 4px;
             outline: none;
+            background-color: #f7f7f7;
+            color: #333;
+            transition: border-color 0.3s;
         }
 
         input[type="text"]:focus, input[type="email"]:focus, input[type="password"]:focus {
-            border-color: #007bff;
+            border-color: #000;  /* Border color turns black on focus */
+            background-color: #fff; /* White background when focused */
         }
 
         .submit-btn {
             width: 100%;
-            padding: 12px;
-            background-color: #007bff;
+            padding: 15px;
+            background-color: #000;
             color: white;
             font-size: 16px;
             border: none;
@@ -74,34 +82,67 @@
         }
 
         .submit-btn:hover {
-            background-color: #0056b3;
+            background-color: #333; /* Slightly lighter black on hover */
         }
 
         .footer {
-            text-align: center;
             margin-top: 20px;
             font-size: 14px;
+            color: #777;
         }
 
         .footer a {
-            color: #007bff;
+            color: #000;
             text-decoration: none;
+            font-weight: 600;
         }
 
         .footer a:hover {
             text-decoration: underline;
         }
+
+        /* Alerts */
+        .alert {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            margin-top: 20px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+
+        .alert .btn-close {
+            background: none;
+            border: none;
+            color: #721c24;
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        /* Optional: Add a background video for extra elegance (optional) */
+        /* body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('your-background-image.jpg') no-repeat center center fixed;
+            background-size: cover;
+            z-index: -1;
+            opacity: 0.2;
+        } */
     </style>
 </head>
 <body>
 
 <div class="container">
-    <h2>Register</h2>
+    <h2>Create Account</h2>
     <form action="#" method="POST">
         {% csrf_token %}
         <div class="form-group">
-            <label for="name">Name</label>
-            <input type="text" id="name" name="name" placeholder="Enter your name" required>
+            <label for="name">Full Name</label>
+            <input type="text" id="name" name="name" placeholder="Enter your full name" required>
         </div>
         <div class="form-group">
             <label for="email">Email Address</label>
@@ -127,5 +168,6 @@
     {% endfor %}
     {% endif %}
 </div>
+
 </body>
 </html>
