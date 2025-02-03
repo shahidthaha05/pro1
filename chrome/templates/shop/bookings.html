@@ -31,24 +31,41 @@
             </div>
         </div>
     </nav>
+
     <div class="container mt-4">
+        <h2 class="mb-4">Bookings</h2>
+
         <div class="row g-4">
-            {% for i in buy %}
+            {% for buy, order in combined_data %}
             <div class="col-lg-4">
                 <div class="card">
-                    <img src="{{i.product.img.url}}" class="card-img-top img-fluid" alt="{{i.product.name}}">
+                    <img src="{{ buy.product.img.url }}" class="card-img-top img-fluid" alt="{{ buy.product.name }}">
                     <div class="card-body">
-                        <h5 class="card-title">{{i.product.name}}</h5>
+                        <h5 class="card-title">{{ buy.product.name }}</h5>
                         <p class="card-text">
-                            Price: {{i.price}}<br>
-                            Date: {{i.date}}<br>
-                            User: {{i.user.first_name}}
+                            Price: {{ buy.price }}<br>
+                            Date: {{ buy.date }}<br>
+                           
                         </p>
+
+                        <!-- Displaying Order Details -->
+                        <div class="mt-3">
+                            <h6>Order Details:</h6>
+                            <p>
+                                <strong>Name:</strong> {{ order.name }}<br>
+                                <strong>Email:</strong> {{ order.email }}<br>
+                                <strong>Phone Number:</strong> {{ order.phone_number }}<br>
+                                <strong>Shipping Address:</strong> {{ order.shipping_address }}<br>
+                                <strong>Status:</strong> {{ order.status }}<br>
+                            </p>
+                        </div>
                     </div>
                 </div>
             </div>
             {% endfor %}
+            
         </div>
     </div>
+
 </body>
 </html>

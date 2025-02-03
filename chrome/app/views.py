@@ -127,9 +127,23 @@ def delete(req,pid):
     return redirect(home)
 
 
-def bookings(req):
-    buy=Buy.objects.all()[::-1]
-    return render(req,'shop/bookings.html',{'buy':buy})
+from django.shortcuts import render
+from .models import Buy, Booking, Order
+
+def bookings(request):
+    # Get all Buy objects with related product and user data
+    buy = Buy.objects.select_related('product', 'user').all().order_by('-date')
+    
+    # Get all Order objects related to the Buy objects (assuming there's a way to link Buy to Order)
+    orders = Order.objects.all()
+
+    # Create combined data
+    combined_data = zip(buy, orders)
+
+    return render(request, 'shop/bookings.html', {'combined_data': combined_data})
+
+
+
 
 
 
@@ -191,7 +205,7 @@ def user_buy(req,cid):
     price=cart.product.offer_price
     buy=Buy.objects.create(user=user,product=product,price=price)
     buy.save()
-    return redirect(user_bookings)
+    return redirect(order_create)
 
 
 def user_buy1(req,pid):
@@ -200,10 +214,32 @@ def user_buy1(req,pid):
     price=product.offer_price
     buy=Buy.objects.create(user=user,product=product,price=price)
     buy.save()
-    return redirect(user_home)
+    return redirect(order_create)
 
 
 def user_bookings(req):
     user=User.objects.get(username=req.session['user'])
     buy=Buy.objects.filter(user=user)[::-1]
-    return render(req,'user/bookings.html',{'buy':buy})
+    return render(req, 'user/bookings.html' ,{'buy':buy})
+
+
+
+# views.py
+from django.shortcuts import render, redirect
+from .form import OrderForm
+from .models import Order
+
+def order_create(request):
+    if request.method == 'POST':
+        form = OrderForm(request.POST)
+        if form.is_valid():
+            form.save()
+            return redirect('order_success')  # Redirect to success page
+    else:
+        form = OrderForm()
+    
+    return render(request, 'user/book_product.html', {'form': form})
+
+def order_success(request):
+    return render(request, 'user/order_success.html')
+
