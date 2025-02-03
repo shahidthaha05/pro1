@@ -191,7 +191,7 @@ def user_buy(req,cid):
     price=cart.product.offer_price
     buy=Buy.objects.create(user=user,product=product,price=price)
     buy.save()
-    return redirect(view_cart)
+    return redirect(user_bookings)
 
 
 def user_buy1(req,pid):
