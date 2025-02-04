@@ -4,6 +4,8 @@ from .models import *
 import os
 from django.contrib.auth.models import *
 from django.contrib import messages
+from .models import Product, Size
+from .form import ProductForm
 
 
 # Create your views here.
@@ -80,43 +82,51 @@ def chrome_logout(req):
 
 def add_prod(req):
     if 'chrome' in req.session:
-        if req.method=='POST':
-            prd_id=req.POST['prd_id']
-            prd_name=req.POST['prd_name']
-            prd_price=req.POST['prd_price']
-            ofr_price=req.POST['ofr_price']
-            dis=req.POST['dis']
-            img=req.FILES['img']
-            data=Product.objects.create(pro_id=prd_id,name=prd_name,price=prd_price,offer_price=ofr_price,dis=dis,img=img)
-            data.save()
-            return redirect(add_prod)
-        else:
-            return render(req,'shop/add_prod.html')
-    else:
-        return redirect(chrome_login)
-    
-def edit(req,pid):
-    if 'chrome' in req.session:
-        if req.method=='POST':
-            prd_id=req.POST['prd_id']
-            prd_name=req.POST['prd_name']
-            prd_price=req.POST['prd_price']
-            ofr_price=req.POST['ofr_price']
-            dis=req.POST['dis']
-            img=req.FILES.get('img')
-            if img:
-                Product.objects.filter(pk=pid).update(pro_id=prd_id,name=prd_name,price=prd_price,offer_price=ofr_price,dis=dis)
-                data=Product.objects.get(pk=pid)
-                data.img=img
-                data.save()
+        if req.method == 'POST':
+            form = ProductForm(req.POST, req.FILES)
+            if form.is_valid():
+                product = form.save()
+                product.sizes.set(req.POST.getlist('sizes'))  # Ensure multiple sizes are saved
+                return redirect('home')  # Redirect to home after adding
             else:
-                Product.objects.filter(pk=pid).update(pro_id=prd_id,name=prd_name,price=prd_price,offer_price=ofr_price,dis=dis)
-            return redirect(home)
+                print(form.errors)  # Debugging: Print form errors
         else:
-            data=Product.objects.get(pk=pid)
-            return render(req,'shop/edit.html',{'product':data})
+            form = ProductForm()
+        return render(req, 'shop/add_prod.html', {'form': form})
     else:
-        return redirect(chrome_login)
+        return redirect('chrome_login')
+    
+
+def edit(req, pid):
+    if 'chrome' in req.session:
+        product = Product.objects.get(pk=pid)
+        sizes = Size.objects.all()  # Get all available sizes
+        
+        if req.method == 'POST':
+            product.pro_id = req.POST['prd_id']
+            product.name = req.POST['prd_name']
+            product.base_price = req.POST['prd_price']
+            product.offer_price = req.POST['ofr_price']
+            product.dis = req.POST['dis']
+            product.quantity = req.POST['quantity']  # Update quantity
+            
+            # Update image if provided
+            img = req.FILES.get('img')
+            if img:
+                product.img = img
+            
+            product.save()
+
+            # Update sizes
+            selected_sizes = req.POST.getlist('sizes')  # Get list of selected size IDs
+            product.sizes.set(selected_sizes)  # Update many-to-many relationship
+
+            return redirect('home')  # Redirect back to home page
+
+        return render(req, 'shop/edit.html', {'product': product, 'sizes': sizes})
+    else:
+        return redirect('chrome_login')
+
 
 def delete(req,pid):
     data=Product.objects.get(pk=pid)
@@ -179,17 +189,52 @@ def view_pro(req,pid):
     data=Product.objects.get(pk=pid)
     return render(req,'user/view_pro.html',{'data':data})
 
-def add_to_cart(req,pid):
-    prod=Product.objects.get(pk=pid)
-    user=User.objects.get(username=req.session['user'])
-    data=Cart.objects.create(user=user,product=prod)
-    data.save()
-    return redirect(view_cart)
+def add_to_cart(req, pid):
+    if 'user' not in req.session:
+        return redirect('chrome_login')
+
+    product = Product.objects.get(pk=pid)
+    user = User.objects.get(username=req.session['user'])
+
+    size_id = req.POST.get('size')  # Get selected size from form
+    selected_size = Size.objects.get(id=size_id) if size_id else None  # Fetch size object
+    quantity = int(req.POST.get('quantity', 1))  # Get selected quantity
+
+    # Check if product with same size exists in cart
+    cart_item, created = Cart.objects.get_or_create(user=user, product=product, size=selected_size)
+
+    if not created:
+        cart_item.quantity += quantity  # If product is already in cart, increase quantity
+    else:
+        cart_item.quantity = quantity
+
+    cart_item.save()
+    
+    print(f"Added to Cart: ID {cart_item.id}, Product {cart_item.product.name}, Size {cart_item.size.name}, Quantity {cart_item.quantity}")
+
+    return redirect('view_cart')
+
+
+
+
+
 
 def view_cart(req):
-    user=User.objects.get(username=req.session['user'])
-    cart_det=Cart.objects.filter(user=user)
-    return render(req,'user/view_cart.html',{'cart_det':cart_det})
+    if 'user' not in req.session:  # Ensure user is logged in
+        return redirect('chrome_login')
+
+    user = User.objects.get(username=req.session['user'])
+    cart_det = Cart.objects.filter(user=user)
+
+    # Check if the cart contains data
+    print("Cart Items:", cart_det)  # Debugging
+
+    for item in cart_det:
+        item.total_price = item.product.offer_price * item.quantity  # Calculate total price
+
+    return render(req, 'user/view_cart.html', {'cart_det': cart_det})
+
+
 
 
 def delete_cart(req,id):
@@ -242,4 +287,9 @@ def order_create(request):
 
 def order_success(request):
     return render(request, 'user/order_success.html')
+
+
+
+
+
 

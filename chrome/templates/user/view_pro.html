@@ -109,19 +109,27 @@
             <div class="col-lg-6 product-info">
                 <h2>{{ data.name }}</h2>
                 <div class="price-section">
-                    <span class="offer-price">₹{{ data.price }}</span>
+                    <span class="offer-price">₹{{ data.base_price }}</span>
                     <span class="price">₹{{ data.offer_price }}</span>
                 </div>
                 <p>{{ data.dis }}</p>
-                <!-- <div class="size-selection">
-                    <label for="size">Select Size:</label>
-                    <select id="size" name="size">
-                        <option value="small">S</option>
-                        <option value="medium" selected>M</option>
-                        <option value="large">L</option>
-                        <option value="extralarge">XL</option>
+                <form method="post" action="{% url 'add_to_cart' data.id %}">
+                    {% csrf_token %}
+                
+                    <label>Size:</label>
+                    <select name="size" required>
+                        {% for size in data.sizes.all %}
+                            <option value="{{ size.id }}">{{ size.name }}</option>
+                        {% endfor %}
                     </select>
-                </div> -->
+                
+                    <label>Quantity:</label>
+                    <input type="number" name="quantity" min="1" max="{{ data.quantity }}" value="1" required>
+                
+                    
+                </form>
+                
+                
                 <div class="actions">
                     <a href="../add_to_cart/{{ data.pk }}" class="add-to-cart">ADD TO CART</a>
                     <a href="../user_buy1/{{ data.pk }}" class="buy-now">BUY NOW</a>

@@ -2,20 +2,31 @@ from django.db import models
 from django.contrib.auth.models import User
 
 
+
+
+
+class Size(models.Model):
+    name = models.CharField(max_length=10)  # Small, Medium, Large
+
+    def __str__(self):
+        return self.name
+
+
 class Product(models.Model):
-    SIZE_CHOICES = [
-        ('S', 'Small'),
-        ('M', 'Medium'),
-        ('L', 'Large'),
-    ]
     pro_id=models.TextField()
     name=models.TextField()
-    price=models.IntegerField()
+    base_price=models.IntegerField()
     offer_price=models.IntegerField()
     img=models.FileField()
     dis=models.TextField()
-    size = models.CharField(max_length=1, choices=SIZE_CHOICES)
-    
+    sizes = models.ManyToManyField(Size)  # Allow multiple size selection
+    quantity = models.PositiveIntegerField(default=1)
+
+    def calculate_price(self, quantity):
+        return self.base_price * quantity  # Price increases with quantity
+
+    def __str__(self):
+        return self.name
 
 
 
@@ -24,6 +35,14 @@ class Product(models.Model):
 class Cart(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)
     product=models.ForeignKey(Product,on_delete=models.CASCADE)
+    size = models.ForeignKey(Size, on_delete=models.CASCADE, null=True)
+    quantity = models.PositiveIntegerField(default=1) 
+
+
+
+
+    def total_price(self):
+        return self.product.offer_price * self.quantity 
 
 
 class Buy(models.Model):
