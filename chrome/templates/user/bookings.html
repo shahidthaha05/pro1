@@ -49,6 +49,17 @@
             font-size: 16px;
             color: #555;
         }
+        .price {
+            font-size: 18px;
+            font-weight: bold;
+            color: #28a745;
+            margin-top: 10px;
+        }
+        .price .old-price {
+            text-decoration: line-through;
+            color: #dc3545;
+            margin-left: 10px;
+        }
         .btn-home {
             display: inline-block;
             margin-top: 20px;
@@ -101,8 +112,10 @@
                     <img src="{{ i.product.img.url }}" alt="{{ i.product.name }}">
                     <div class="booking-info">
                         <h5>{{ i.product.name }}</h5>
-                        <p><strong>Price:</strong> ₹{{ i.base_price }}</p>
+                        <p><strong>Price:</strong> ₹{{ i.product.base_price }}</p>
                         <p><strong>Date:</strong> {{ i.date }}</p>
+                        <p class="price">Offer Price: ₹{{ i.product.offer_price }}</p>
+                        
                     </div>
                 </div>
             </div>
@@ -111,3 +124,4 @@
     </div>
 </body>
 </html>
+

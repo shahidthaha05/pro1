@@ -6,6 +6,13 @@ from django.contrib.auth.models import *
 from django.contrib import messages
 from .models import Product, Size
 from .form import ProductForm
+from django.shortcuts import render, get_object_or_404
+from .models import Product
+from django.http import HttpResponse
+
+
+
+
 
 
 # Create your views here.
@@ -185,9 +192,16 @@ def user_home(req):
         return redirect(chrome_login)
     
 
-def view_pro(req,pid):
-    data=Product.objects.get(pk=pid)
-    return render(req,'user/view_pro.html',{'data':data})
+
+
+def view_pro(req, pid):
+    # Get the product by its ID
+    product = get_object_or_404(Product, pk=pid)
+
+    # Pass the product data to the template
+    return render(req, 'user/view_pro.html', {'data': product})
+
+
 
 def add_to_cart(req, pid):
     if 'user' not in req.session:
@@ -196,23 +210,34 @@ def add_to_cart(req, pid):
     product = Product.objects.get(pk=pid)
     user = User.objects.get(username=req.session['user'])
 
-    size_id = req.POST.get('size')  # Get selected size from form
-    selected_size = Size.objects.get(id=size_id) if size_id else None  # Fetch size object
+    # Get the selected size from the POST data
+    size_id = req.POST.get('size')
+    selected_size = Size.objects.get(id=size_id) if size_id else None  # Fetch the size object
     quantity = int(req.POST.get('quantity', 1))  # Get selected quantity
 
-    # Check if product with same size exists in cart
+    if not selected_size:
+        return HttpResponse("Size is required", status=400)
+
+    # Check if there is enough stock
+    if product.quantity < quantity:
+        return HttpResponse(f"Only {product.stock} items are available in stock", status=400)
+
+    # Check if the product with the selected size already exists in the cart
     cart_item, created = Cart.objects.get_or_create(user=user, product=product, size=selected_size)
 
     if not created:
-        cart_item.quantity += quantity  # If product is already in cart, increase quantity
+        cart_item.quantity += quantity  # If the item already exists in the cart, increase the quantity
     else:
         cart_item.quantity = quantity
 
     cart_item.save()
-    
-    print(f"Added to Cart: ID {cart_item.id}, Product {cart_item.product.name}, Size {cart_item.size.name}, Quantity {cart_item.quantity}")
+
+    # Decrease stock after adding to cart
+    product.quantity -= quantity
+    product.save()
 
     return redirect('view_cart')
+
 
 
 
@@ -224,15 +249,19 @@ def view_cart(req):
         return redirect('chrome_login')
 
     user = User.objects.get(username=req.session['user'])
-    cart_det = Cart.objects.filter(user=user)
+
+    # Use select_related to fetch related product and size data
+    cart_det = Cart.objects.filter(user=user).select_related('product', 'size')
 
     # Check if the cart contains data
     print("Cart Items:", cart_det)  # Debugging
 
+    # Calculate the total price for each cart item
     for item in cart_det:
         item.total_price = item.product.offer_price * item.quantity  # Calculate total price
 
     return render(req, 'user/view_cart.html', {'cart_det': cart_det})
+
 
 
 
@@ -253,13 +282,27 @@ def user_buy(req,cid):
     return redirect(order_create)
 
 
-def user_buy1(req,pid):
-    user=User.objects.get(username=req.session['user'])
-    product=Product.objects.get(pk=pid)
-    price=product.offer_price
-    buy=Buy.objects.create(user=user,product=product,price=price)
-    buy.save()
-    return redirect(order_create)
+
+def user_buy1(req, pid):
+    user = User.objects.get(username=req.session['user'])
+    product = Product.objects.get(pk=pid)
+    
+    # Check if there's stock available
+    if product.quantity > 0:
+        price = product.offer_price
+        buy = Buy.objects.create(user=user, product=product, price=price)
+        buy.save()
+
+        # Decrease the stock of the product
+        product.quantity -= 1
+        product.save()
+
+        return redirect('order_create')  # or wherever you want to redirect after purchase
+    else:
+        # If no stock available, send an error message
+        messages.error(req, "Sorry, this product is out of stock.")
+        return redirect('view_cart')  # Or redirect to another page if needed
+
 
 
 def user_bookings(req):

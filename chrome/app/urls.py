@@ -16,7 +16,7 @@ urlpatterns=[
     path('register/',views.register),
     path('user_home',views.user_home ,name='user_home'),
     path('view_pro/<pid>',views.view_pro,name='view_pro'),
-    path('add_to_cart/<pid>', views.add_to_cart, name='add_to_cart'),
+    path('add_to_cart/<int:pid>/', views.add_to_cart, name='add_to_cart'),
     path('view_cart/',views.view_cart,name='view_cart'),
     path('delete_cart/<int:id>/', views.delete_cart, name='delete_cart'),
     path('user_buy/<cid>',views.user_buy,name='user_buy'),

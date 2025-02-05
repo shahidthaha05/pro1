@@ -13,6 +13,7 @@
             margin: 0;
             padding: 0;
         }
+
         .container {
             max-width: 1000px;
             margin: 50px auto;
@@ -21,61 +22,73 @@
             border-radius: 10px;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
         }
+
         .product-header {
             display: flex;
             flex-wrap: wrap;
             gap: 20px;
         }
+
         .product-header img {
             max-width: 100%;
             height: auto;
             border-radius: 8px;
             border: 1px solid #ddd;
         }
+
         .product-info {
             flex: 1;
             text-align: left;
         }
+
         .product-info h2 {
             font-size: 28px;
             color: #007bff;
             margin-bottom: 10px;
         }
+
         .product-info p {
             font-size: 16px;
             color: #555;
             margin-bottom: 10px;
         }
+
         .price-section {
             display: flex;
             flex-direction: column;
             margin-bottom: 20px;
         }
+
         .price {
             font-size: 22px;
             color: #28a745;
             font-weight: bold;
         }
+
         .offer-price {
             font-size: 18px;
             color: #dc3545;
             text-decoration: line-through;
         }
-        .size-selection {
+
+        .size-selection, .quantity-selection {
             margin-bottom: 20px;
         }
-        .size-selection select {
+
+        .size-selection select, .quantity-selection input {
             width: 200px;
             padding: 10px;
             border-radius: 5px;
             border: 1px solid #ccc;
         }
+
         .actions {
             display: flex;
             gap: 20px;
             margin-top: 20px;
         }
-        .actions a {
+
+        .actions a, .actions button {
             padding: 12px 20px;
             font-size: 16px;
             border-radius: 5px;
@@ -85,18 +98,33 @@
             text-decoration: none;
             transition: background-color 0.3s ease;
         }
+
         .add-to-cart {
             background-color: #28a745;
             color: #333;
         }
+
         .add-to-cart:hover {
-            background-color: #28a745;
+            background-color: #218838;
         }
+
         .buy-now {
             background-color: #007bff;
         }
+
         .buy-now:hover {
-            background-color: #007bff;
+            background-color: #0056b3;
+        }
+
+        .product-header h2 {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .product-header p {
+            font-size: 14px;
+            color: #555;
+            margin-bottom: 20px;
         }
     </style>
 </head>
@@ -113,30 +141,34 @@
                     <span class="price">₹{{ data.offer_price }}</span>
                 </div>
                 <p>{{ data.dis }}</p>
-                <form method="post" action="{% url 'add_to_cart' data.id %}">
+
+                <!-- Form for selecting size and quantity, and adding to cart -->
+                <form method="POST" action="{% url 'add_to_cart' pid=data.id %}">
                     {% csrf_token %}
+                    <div class="size-selection">
+                        <label for="size">Size:</label>
+                        <select name="size" id="size" required>
+                            {% for size in data.sizes.all %}
+                                <option value="{{ size.id }}">{{ size.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
                 
-                    <label>Size:</label>
-                    <select name="size" required>
-                        {% for size in data.sizes.all %}
-                            <option value="{{ size.id }}">{{ size.name }}</option>
-                        {% endfor %}
-                    </select>
+                    <div class="quantity-selection">
+                        <label for="quantity">Quantity:</label>
+                        <input type="number" name="quantity" id="quantity" value="1" min="1" max="{{ data.quantity }}" required>
+                    </div>
                 
-                    <label>Quantity:</label>
-                    <input type="number" name="quantity" min="1" max="{{ data.quantity }}" value="1" required>
-                
-                    
+                    <button type="submit" class="btn btn-success add-to-cart">ADD TO CART</button>  
                 </form>
                 
-                
                 <div class="actions">
-                    <a href="../add_to_cart/{{ data.pk }}" class="add-to-cart">ADD TO CART</a>
                     <a href="../user_buy1/{{ data.pk }}" class="buy-now">BUY NOW</a>
+                   
+
                 </div>
             </div>
         </div>
     </div>
 </body>
-</html> 
-
+</html>
