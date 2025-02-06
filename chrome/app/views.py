@@ -209,6 +209,7 @@ def add_to_cart(req, pid):
     if 'user' not in req.session:
         return redirect('chrome_login')
 
+    # Fetch the product and user
     product = Product.objects.get(pk=pid)
     user = User.objects.get(username=req.session['user'])
 
@@ -220,16 +221,21 @@ def add_to_cart(req, pid):
     if not selected_size:
         return HttpResponse("Size is required", status=400)
 
-  
-
     # Check if the product with the selected size already exists in the cart
     cart_item, created = Cart.objects.get_or_create(user=user, product=product, size=selected_size)
 
-
+    if created:
+        # If it's a new cart item, set the total price based on quantity
+        cart_item.quantity = quantity
+        cart_item.total_price = quantity * product.offer_price  # Set the total price
+    else:
+        # If the cart item already exists, simply update the quantity and total price
+        cart_item.quantity += quantity  # Increment the existing quantity
+        cart_item.total_price = cart_item.quantity * product.offer_price  # Recalculate total price
 
     cart_item.save()
 
-    # Decrease stock after adding to cart
+    # Decrease stock after adding to cart (this logic is based on how your stock system is designed)
     product.quantity -= quantity
     product.save()
 
@@ -241,23 +247,24 @@ def add_to_cart(req, pid):
 
 
 
-def view_cart(req):
-    if 'user' not in req.session:  # Ensure user is logged in
+
+def view_cart(request):
+    if 'user' not in request.session:  # Ensure user is logged in
         return redirect('chrome_login')
 
-    user = User.objects.get(username=req.session['user'])
+    user = User.objects.get(username=request.session['user'])
 
     # Use select_related to fetch related product and size data
     cart_det = Cart.objects.filter(user=user).select_related('product', 'size')
 
-    # Check if the cart contains data
-    print("Cart Items:", cart_det)  # Debugging
-
     # Calculate the total price for each cart item
+    total_price = 0  # To calculate total price of all items in the cart
     for item in cart_det:
-        item.total_price = item.product.offer_price * item.quantity  # Calculate total price
+        item.total_price = item.product.offer_price * item.quantity  # Calculate total price for each item
+        total_price += item.total_price  # Add it to the grand total
 
-    return render(req, 'user/view_cart.html', {'cart_det': cart_det})
+    return render(request, 'user/view_cart.html', {'cart_det': cart_det, 'total_price': total_price})
+
 
 
 
@@ -364,37 +371,33 @@ from .models import Cart
 
 
 def update_cart_quantity(request):
-    if request.method == "POST":
-        item_id = request.POST.get("item_id")
-        change_qty = int(request.POST.get("change_qty"))  # +1 or -1
+    if request.method == 'POST':
+        item_id = request.POST.get('item_id')
+        new_quantity = int(request.POST.get('new_quantity'))  # Get the new quantity from the form
 
-        cart_item = get_object_or_404(Cart, id=item_id)
-        product = cart_item.product
+        try:
+            cart_item = Cart.objects.get(id=item_id, user=request.user)  # Get the cart item for the current user
+            product = cart_item.product  # Get the associated product
 
-        # Ensure user doesn't exceed available stock
-        if change_qty > 0 and cart_item.quantity >= product.quantity:
-            messages.error(request, "Not enough stock available!")
-        elif cart_item.quantity + change_qty < 1:
-            messages.error(request, "Quantity must be at least 1!")
-        else:
-            # Update product stock
-            if change_qty > 0:
-                product.quantity -= 1  # Reduce stock
+            # Check if the new quantity is within stock limits
+            if 1 <= new_quantity <= product.quantity:
+                # Update quantity and recalculate total price
+                cart_item.quantity = new_quantity
+                cart_item.total_price = cart_item.quantity * product.offer_price  # Recalculate total price
+
+                # Save the updated cart item
+                cart_item.save()
+                messages.success(request, f"Quantity updated to {new_quantity}.")
             else:
-                product.quantity += 1  # Increase stock
+                messages.error(request, f"Cannot update quantity. Max stock available: {product.quantity}.")
+        except Cart.DoesNotExist:
+            messages.error(request, "Item not found in your cart.")
+        except Product.DoesNotExist:
+            messages.error(request, "Product not found.")
 
-            product.save()
+        return redirect('view_cart')  # Redirect back to the cart page
 
-            # Update cart quantity
-            cart_item.quantity += change_qty
-            cart_item.save()
-
-        return redirect("view_cart")  # Redirect to cart page
-
-
-
-
-
+    return redirect('view_cart')  # If not a POST request, redirect back to the cart
 
 
 

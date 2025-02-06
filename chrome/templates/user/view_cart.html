@@ -43,6 +43,23 @@
             color: red;
             font-weight: bold;
         }
+        .summary {
+            background-color: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            margin-top: 30px;
+            text-align: center;
+        }
+        .summary h4 {
+            font-size: 22px;
+            color: #007bff;
+        }
+        .summary .total-price {
+            font-size: 24px;
+            font-weight: bold;
+            color: #28a745;
+        }
     </style>
 </head>
 <body>
@@ -86,32 +103,27 @@
                             <s><h6>₹{{ item.product.base_price }}</h6></s>
                             <h3>₹{{ item.product.offer_price }}</h3>
                             <p><strong>Selected Size:</strong> {{ item.size }}</p>
-                            <p><strong>Stock Available:</strong> {{ item.product.quantity}}</p>
-
+                            <p><strong>Stock Available:</strong> {{ item.product.quantity }}</p>
 
                             <!-- Update Quantity Form -->
                             <form method="POST" action="{% url 'update_cart_quantity' %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="item_id" value="{{ item.id }}">
-
-                                <div class="d-flex justify-content-center align-items-center">
-                                    <!-- Decrement Button -->
-                                    <button type="submit" name="change_qty" value="-1" class="btn btn-sm btn-dark" 
-                                        {% if item.quantity <= 1 %}disabled{% endif %}>-</button>
-
-                                    <!-- Quantity Input (Readonly) -->
-                                    <input type="number" name="quantity" class="form-control mx-2" value="{{ item.quantity }}" 
-                                        min="1" max="{{ item.product.quantity }}" style="width: 50px; text-align: center;" readonly>
-
-                                    <!-- Increment Button (Disabled if stock limit reached) -->
-                                    <button type="submit" name="change_qty" value="1" class="btn btn-sm btn-dark"
-                                        {% if item.quantity >= item.product.quantity %}disabled{% endif %}>+</button>
-
+                            
+                                <!-- New Quantity Input -->
+                                <div class="mt-3">
+                                    <label for="new_quantity_{{ item.id }}">Enter Quantity:</label>
+                                    <input type="number" id="new_quantity_{{ item.id }}" name="new_quantity" class="form-control" 
+                                           min="1" max="{{ item.product.quantity }}" value="{{ item.quantity|default:1 }}">
+                                    <button type="submit" class="btn btn-warning btn-sm mt-2" name="change_qty" value="0">Update Quantity</button>
                                 </div>
                             </form>
+                            
+                            
 
                             <!-- Total Price -->
                             <p><strong>Total Price:</strong> ₹{{ item.total_price }}</p>
+
 
                             <!-- Out of Stock Message -->
                             {% if item.quantity >= item.product.quantity %}
@@ -130,7 +142,20 @@
                 <p class="text-center">No items in your cart.</p>
             {% endif %}
         </div>
+
+        <!-- Cart Summary Section -->
+        {% if cart_det %}
+            <div class="summary">
+                <h4>Cart Summary</h4>
+                <p><strong>Total Items:</strong> {{ cart_det|length }}</p>
+                <p><strong>Total Price:</strong> ₹{{ total_price }}</p>
+                {% if total_price > 0 %}
+                    
+                {% else %}
+                    <p class="text-danger">Your cart is empty, please add items to proceed.</p>
+                {% endif %}
+            </div>
+        {% endif %}
     </div>
 </body>
 </html>
-
