@@ -10,6 +10,7 @@ urlpatterns=[
     path('edit/<pid>',views.edit,name='edit'),
     path('delete/<pid>',views.delete,name='delete'),
     path('bookings/',views.bookings,name='bookings'),
+    
 
 
 
@@ -25,5 +26,6 @@ urlpatterns=[
     path('user_buy/<int:cid>/', views.user_buy, name='user_buy'),
     path('order/', views.order_create, name='order_create'),
     path('order/success/', views.order_success, name='order_success'),
+    path("update_cart_quantity/", views.update_cart_quantity, name="update_cart_quantity"),
     
 ]

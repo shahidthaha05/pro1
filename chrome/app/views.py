@@ -8,7 +8,7 @@ from .models import Product, Size
 from .form import ProductForm
 from django.shortcuts import render, get_object_or_404
 from .models import Product
-from django.http import HttpResponse
+from django.http import HttpResponse,JsonResponse
 
 
 
@@ -166,6 +166,8 @@ def bookings(request):
 
 
 
+
+
 # ---------------user--------------
 
 def register(req):
@@ -218,17 +220,12 @@ def add_to_cart(req, pid):
     if not selected_size:
         return HttpResponse("Size is required", status=400)
 
-    # Check if there is enough stock
-    if product.quantity < quantity:
-        return HttpResponse(f"Only {product.stock} items are available in stock", status=400)
+  
 
     # Check if the product with the selected size already exists in the cart
     cart_item, created = Cart.objects.get_or_create(user=user, product=product, size=selected_size)
 
-    if not created:
-        cart_item.quantity += quantity  # If the item already exists in the cart, increase the quantity
-    else:
-        cart_item.quantity = quantity
+
 
     cart_item.save()
 
@@ -266,20 +263,50 @@ def view_cart(req):
 
 
 
-def delete_cart(req,id):
-    cart=Cart.objects.get(pk=id)
-    cart.delete()
-    return redirect(view_cart)
+def delete_cart(request, id):
+    cart_item = get_object_or_404(Cart, id=id)
+    product = cart_item.product
+
+    # Restore stock when item is removed
+    product.quantity += cart_item.quantity
+    product.save()
+
+    cart_item.delete()
+    messages.success(request, "Item removed from cart. Stock updated.")
+    return redirect('view_cart')
 
 
-def user_buy(req,cid):
-    user=User.objects.get(username=req.session['user'])
-    cart=Cart.objects.get(pk=cid)
-    product=cart.product
-    price=cart.product.offer_price
-    buy=Buy.objects.create(user=user,product=product,price=price)
-    buy.save()
+# def user_buy(req,cid):
+#     user=User.objects.get(username=req.session['user'])
+#     cart=Cart.objects.get(pk=cid)
+#     product=cart.product
+#     price=cart.product.offer_price
+#     buy=Buy.objects.create(user=user,product=product,price=price)
+#     buy.save()
+#     return redirect(order_create)
+
+
+
+
+
+def user_buy(request, cid):
+    cart_item = get_object_or_404(Cart, id=cid)
+    product = cart_item.product
+
+    if cart_item.quantity > product.quantity:
+        messages.error(request, "Not enough stock available!")
+        return redirect('view_cart')
+
+    # Reduce stock permanently
+    product.quantity -= cart_item.quantity
+    product.save()
+
+    # Remove item from cart (assuming it is purchased)
+    cart_item.delete()
+
+    messages.success(request, f"Order placed for {product.name}!")
     return redirect(order_create)
+
 
 
 
@@ -330,6 +357,41 @@ def order_create(request):
 
 def order_success(request):
     return render(request, 'user/order_success.html')
+
+
+
+from .models import Cart
+
+
+def update_cart_quantity(request):
+    if request.method == "POST":
+        item_id = request.POST.get("item_id")
+        change_qty = int(request.POST.get("change_qty"))  # +1 or -1
+
+        cart_item = get_object_or_404(Cart, id=item_id)
+        product = cart_item.product
+
+        # Ensure user doesn't exceed available stock
+        if change_qty > 0 and cart_item.quantity >= product.quantity:
+            messages.error(request, "Not enough stock available!")
+        elif cart_item.quantity + change_qty < 1:
+            messages.error(request, "Quantity must be at least 1!")
+        else:
+            # Update product stock
+            if change_qty > 0:
+                product.quantity -= 1  # Reduce stock
+            else:
+                product.quantity += 1  # Increase stock
+
+            product.save()
+
+            # Update cart quantity
+            cart_item.quantity += change_qty
+            cart_item.save()
+
+        return redirect("view_cart")  # Redirect to cart page
+
+
 
 
 
