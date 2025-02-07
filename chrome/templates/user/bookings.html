@@ -106,22 +106,25 @@
     <div class="container">
         <h1 class="text-center mb-4">My Bookings</h1>
         <div class="row">
-            {% for i in buy %}
+            {% for booking in buy %}
             <div class="col-md-6 col-lg-4">
                 <div class="booking-card">
-                    <img src="{{ i.product.img.url }}" alt="{{ i.product.name }}">
+                    <img src="{{ booking.product.img.url }}" alt="{{ booking.product.name }}">
                     <div class="booking-info">
-                        <h5>{{ i.product.name }}</h5>
-                        <p><strong>Price:</strong> ₹{{ i.product.base_price }}</p>
-                        <p><strong>Date:</strong> {{ i.date }}</p>
-                        <p class="price">Offer Price: ₹{{ i.product.offer_price }}</p>
-                        
+                        <h5>{{ booking.product.name }}</h5>
+                        <p><strong>Price:</strong> ₹{{ booking.product.base_price }}</p>
+                        <p><strong>Date:</strong> {{ booking.order.created_at|date:"F j, Y" }}</p>
+                        <p class="price">
+                            Offer Price: ₹{{ booking.product.offer_price }} 
+                            <span class="old-price">₹{{ booking.product.base_price }}</span>
+                        </p>
                     </div>
                 </div>
             </div>
+            {% empty %}
+                <p class="text-center">You have no bookings yet.</p>
             {% endfor %}
         </div>
     </div>
 </body>
 </html>
-
