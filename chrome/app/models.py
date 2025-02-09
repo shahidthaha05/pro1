@@ -74,13 +74,17 @@ class Order(models.Model):
 
 
 
+from django.utils.timezone import now
+
 class Booking(models.Model):
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
     order = models.ForeignKey(Order, on_delete=models.CASCADE)
     price = models.DecimalField(max_digits=10, decimal_places=2)
-   
-    # Other fields like price, date, etc.
+    quantity = models.PositiveIntegerField(default=1)
+    size = models.CharField(max_length=10, default="M")
+    date = models.DateTimeField(default=now)  # Set default value manually
+
 
 
     def save(self, *args, **kwargs):
@@ -88,8 +92,6 @@ class Booking(models.Model):
         if self.product.quantity <= 0:
             raise ValueError("The product is out of stock")
 
-        # Reduce stock when the product is booked
-        self.product.quantity -= 1  # Assuming you want to decrease the quantity by 1 each time a booking is made
-        self.product.save()  # Save the product after reducing stock
+       
         
         super().save(*args, **kwargs)

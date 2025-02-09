@@ -286,9 +286,7 @@ def delete_cart(request, id):
     cart_item = get_object_or_404(Cart, id=id)
     product = cart_item.product
 
-    # Restore stock when item is removed
-    product.quantity += cart_item.quantitty
-    product.save()
+    
 
     cart_item.delete()
     messages.success(request, "Item removed from cart. Stock updated.")
@@ -313,6 +311,11 @@ from django.contrib import messages
 from .models import Cart, Product, Order
 from django.utils import timezone
 
+from django.utils import timezone
+from django.shortcuts import get_object_or_404, redirect
+from django.contrib import messages
+from .models import Buy, Order, Cart, Product
+
 def user_buy(request, cid):
     cart_item = get_object_or_404(Cart, id=cid, user=request.user)
     product = cart_item.product
@@ -336,12 +339,12 @@ def user_buy(request, cid):
         created_at=timezone.now(),
     )
 
-    # Create a Booking record for this order and product
-    Booking.objects.create(
-        product=product,
+    # Save the order in `Buy` instead of `Booking`
+    Buy.objects.create(
         user=request.user,
-        order=order,
-        price=product.offer_price * cart_item.quantitty  # Total price based on quantity
+        product=product,
+        price=product.offer_price * cart_item.quantitty,  # Total price based on quantity
+        date=timezone.now()  # Add a purchase date
     )
 
     # Remove the item from the cart after purchase
@@ -353,8 +356,13 @@ def user_buy(request, cid):
 
 
 
+
+from django.contrib import messages
+from django.shortcuts import redirect
+from .models import User, Product, Buy, Order  # Import Order model
+
 def user_buy1(req, pid):
-    user = User.objects.get(username=req.session['user'])
+    user = User.objects.get(username=req.session['user'])  # Fetch logged-in user
     product = Product.objects.get(pk=pid)
     
     # Check if there's stock available
@@ -369,18 +377,25 @@ def user_buy1(req, pid):
 
         return redirect('order_create')  # or wherever you want to redirect after purchase
     else:
-        # If no stock available, send an error message
         messages.error(req, "Sorry, this product is out of stock.")
-        return redirect('view_cart')  # Or redirect to another page if needed
+        return redirect('view_cart')  
 
 
+
+
+from django.shortcuts import render
+from .models import Buy
 
 def user_bookings(request):
-    # Fetch all bookings for the logged-in user, ordered by creation date
-    bookings = Booking.objects.filter(user=request.user).order_by('-order__created_at')
+    user = request.user  # Get the currently logged-in user
 
-    # Pass bookings to the template
+    # Fetch bookings related to this user
+    bookings = Buy.objects.filter(user=user)  # Correct query
+
     return render(request, 'user/bookings.html', {'buy': bookings})
+
+
+
 
 
 

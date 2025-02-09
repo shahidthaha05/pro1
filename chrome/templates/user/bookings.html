@@ -6,6 +6,8 @@
     <title>My Bookings</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -27,8 +29,8 @@
             padding: 20px;
         }
         .booking-card img {
-            width: 200px;
-            height: 300px;
+            width: 150px;
+            height: 200px;
             object-fit: cover;
             border-radius: 8px;
         }
@@ -60,63 +62,71 @@
             color: #dc3545;
             margin-left: 10px;
         }
-        .btn-home {
-            display: inline-block;
-            margin-top: 20px;
-            background-color: #ffc107;
-            color: #333;
-            font-weight: bold;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 5px;
-            text-decoration: none;
-            transition: background-color 0.3s ease;
+        .search-box {
+            max-width: 400px;
+            margin: 0 auto 20px;
         }
-        .btn-home:hover {
-            background-color: #e0a800;
-            color: #fff;
+        .search-box input {
+            border-radius: 20px;
+            padding: 10px;
         }
     </style>
 </head>
 <body>
+
+    <!-- Navigation Bar -->
     <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
         <div class="container-fluid">
-          <a class="navbar-brand" href="#">CHROME</a>
-          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="collapsibleNavbar">
-            <ul class="navbar-nav">
-              <li class="nav-item">
-                <a class="nav-link" href="user_home">Home</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="view_cart">Cart</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="user_bookings">Bookings</a>
-              </li>
-              <li class="nav-item">
-                <a class="nav-link" href="chrome_logout">Log out</a>
-              </li>    
-            </ul>
-          </div>
+            <a class="navbar-brand" href="#">CHROME</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="user_home">Home</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="view_cart">Cart</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link active" href="user_bookings">Bookings</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="chrome_logout">Log out</a>
+                    </li>    
+                </ul>
+            </div>
         </div>
     </nav>
+
+    <!-- Page Title -->
     <div class="container">
         <h1 class="text-center mb-4">My Bookings</h1>
+
+        <!-- Search Bar -->
+        <div class="search-box text-center">
+            <input type="text" id="searchInput" class="form-control" placeholder="Search by product name...">
+        </div>
+
+        <!-- Bookings List -->
         <div class="row">
             {% for booking in buy %}
-            <div class="col-md-6 col-lg-4">
+            <div class="col-md-6 col-lg-4 booking-card-container">
                 <div class="booking-card">
                     <img src="{{ booking.product.img.url }}" alt="{{ booking.product.name }}">
                     <div class="booking-info">
-                        <h5>{{ booking.product.name }}</h5>
-                        <p><strong>Price:</strong> ₹{{ booking.product.base_price }}</p>
-                        <p><strong>Date:</strong> {{ booking.order.created_at|date:"F j, Y" }}</p>
+                        <h5 class="booking-name">{{ booking.product.name }}</h5>
+                        <p><strong>Booking Date:</strong> {{ booking.date|date:"F j, Y" }}</p>
                         <p class="price">
-                            Offer Price: ₹{{ booking.product.offer_price }} 
-                            <span class="old-price">₹{{ booking.product.base_price }}</span>
+                            <strong>Offer Price:</strong> ₹{{ booking.price }}
+                        </p>
+                        <p><strong>Status:</strong> 
+                            <span class="badge {% if booking.order.status == 'Pending' %}bg-warning
+                                                 {% elif booking.order.status == 'Confirmed' %}bg-success
+                                                 {% else %}bg-danger{% endif %}">
+                                {{ booking.order.status }}
+                            </span>
                         </p>
                     </div>
                 </div>
@@ -126,5 +136,23 @@
             {% endfor %}
         </div>
     </div>
+
+    <!-- JavaScript for Live Search -->
+    <script>
+        document.getElementById("searchInput").addEventListener("keyup", function() {
+            let filter = this.value.toLowerCase();
+            let cards = document.querySelectorAll(".booking-card-container");
+
+            cards.forEach(card => {
+                let name = card.querySelector(".booking-name").textContent.toLowerCase();
+                if (name.includes(filter)) {
+                    card.style.display = "block";
+                } else {
+                    card.style.display = "none";
+                }
+            });
+        });
+    </script>
+
 </body>
 </html>

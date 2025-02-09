@@ -3,22 +3,113 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bookings</title>
+    <title>Admin Bookings</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
+    <style>
+        body {
+            background-color: #181818;
+            color: #fff;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Navbar */
+        .navbar {
+            background-color: #222;
+            padding: 15px;
+        }
+
+        .navbar a {
+            color: #fff !important;
+            font-size: 18px;
+        }
+
+        .navbar a:hover {
+            color: #ffc107 !important;
+        }
+
+        /* Content Area */
+        .content {
+            padding: 20px;
+            margin-top: 80px;
+        }
+
+        /* Search Bar */
+        .search-bar {
+            width: 300px;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+        }
+
+        /* Table Styling */
+        .table-container {
+            background: #222;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(255, 255, 255, 0.1);
+        }
+
+        .table thead {
+            background-color: #333;
+            color: #fff;
+        }
+
+        .table tbody tr {
+            transition: 0.3s;
+        }
+
+        .table tbody tr:hover {
+            background-color: #292929;
+        }
+
+        /* Product Image */
+        .product-img {
+            width: 60px;
+            height: 60px;
+            object-fit: cover;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+
+        /* Status Badges */
+        .status-badge {
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+
+        .status-pending {
+            background-color: #ffc107;
+            color: #000;
+        }
+
+        .status-confirmed {
+            background-color: #28a745;
+            color: #fff;
+        }
+
+        .status-cancelled {
+            background-color: #dc3545;
+            color: #fff;
+        }
+    </style>
 </head>
 <body>
-    <nav class="navbar navbar-expand-sm bg-dark navbar-dark">
+
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">CHROME</a>
-            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar">
+            <a class="navbar-brand" href="#">Admin Panel</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
-            <div class="collapse navbar-collapse" id="collapsibleNavbar">
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNav">
                 <ul class="navbar-nav">
                     <li class="nav-item">
-                        <a class="nav-link active" href="../home">
+                        <a class="nav-link" href="../home">
                             <i class="fas fa-home"></i> Home
                         </a>
                     </li>
@@ -32,40 +123,68 @@
         </div>
     </nav>
 
-    <div class="container mt-4">
-        <h2 class="mb-4">Bookings</h2>
+    <!-- Main Content -->
+    <div class="content">
+        <div class="d-flex justify-content-between align-items-center">
+            <h2>Bookings</h2>
+            <input type="text" id="search" class="search-bar" placeholder="Search Bookings...">
+        </div>
 
-        <div class="row g-4">
-            {% for buy, order in combined_data %}
-            <div class="col-lg-4">
-                <div class="card">
-                    <img src="{{ buy.product.img.url }}" class="card-img-top img-fluid" alt="{{ buy.product.name }}">
-                    <div class="card-body">
-                        <h5 class="card-title">{{ buy.product.name }}</h5>
-                        <p class="card-text">
-                            Price: {{ buy.base_price }}<br>
-                            Date: {{ buy.date }}<br>
-                           
-                        </p>
-
-                        <!-- Displaying Order Details -->
-                        <div class="mt-3">
-                            <h6>Order Details:</h6>
-                            <p>
-                                <strong>Name:</strong> {{ order.name }}<br>
-                                <strong>Email:</strong> {{ order.email }}<br>
-                                <strong>Phone Number:</strong> {{ order.phone_number }}<br>
-                                <strong>Shipping Address:</strong> {{ order.shipping_address }}<br>
-                                <strong>Status:</strong> {{ order.status }}<br>
-                            </p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
-            
+        <div class="table-container mt-4">
+            <table class="table table-dark table-hover">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Offer Price</th>
+                        <th>Date</th>
+                        <th>Customer</th>
+                        <th>Email</th>
+                        <th>Phone</th>
+                        <th>Address</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody id="bookingTable">
+                    {% for buy, order in combined_data %}
+                    <tr>
+                        <td>
+                            <img src="{{ buy.product.img.url }}" alt="{{ buy.product.name }}" class="product-img">
+                            {{ buy.product.name }}
+                        </td>
+                        <td>₹{{ buy.price }}</td>
+                        <td>{{ buy.date }}</td>
+                        <td>{{ order.name }}</td>
+                        <td>{{ order.email }}</td>
+                        <td>{{ order.phone_number }}</td>
+                        <td>{{ order.shipping_address }}</td>
+                        <td>
+                            <span class="status-badge 
+                                {% if order.status == 'Pending' %}status-pending
+                                {% elif order.status == 'Confirmed' %}status-confirmed
+                                {% elif order.status == 'Cancelled' %}status-cancelled
+                                {% endif %}">
+                                {{ order.status }}
+                            </span>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
+
+    <script>
+        // Search Functionality
+        document.getElementById('search').addEventListener('input', function() {
+            let searchValue = this.value.toLowerCase();
+            let rows = document.querySelectorAll('#bookingTable tr');
+
+            rows.forEach(row => {
+                let text = row.innerText.toLowerCase();
+                row.style.display = text.includes(searchValue) ? "" : "none";
+            });
+        });
+    </script>
 
 </body>
 </html>
