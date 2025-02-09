@@ -20,3 +20,17 @@ class ProductAdmin(admin.ModelAdmin):
 @admin.register(Size)
 class SizeAdmin(admin.ModelAdmin):
     list_display = ("name",)
+
+
+
+from django.contrib import admin
+from .models import Booking, Product, Size  # Import Booking model
+
+# Register Booking model in the admin panel
+@admin.register(Booking)
+class BookingAdmin(admin.ModelAdmin):
+    list_display = ("user", "product", "size", "quantity", "price", "date")
+    search_fields = ("user__username", "product__name", "size")  # Enable search
+
+
+

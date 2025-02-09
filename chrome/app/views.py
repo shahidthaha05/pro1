@@ -186,13 +186,20 @@ def register(req):
         return render(req,'user/register.html')
     
 
+def intro(req):
+    if 'user' in req.session:
+        data=Product.objects.all()
+        return render(req,'user/intro.html',{'data':data})
+    else:
+        return redirect(chrome_login)
+    
+
 def user_home(req):
     if 'user' in req.session:
         data=Product.objects.all()
         return render(req,'user/home.html',{'data':data})
     else:
         return redirect(chrome_login)
-    
 
 
 
@@ -339,10 +346,15 @@ def user_buy(request, cid):
         created_at=timezone.now(),
     )
 
+
+
+
     # Save the order in `Buy` instead of `Booking`
-    Buy.objects.create(
+    order=Buy.objects.create(
         user=request.user,
         product=product,
+        size=request.POST.get("size"),
+        quantity=request.POST.get("quantity"),
         price=product.offer_price * cart_item.quantitty,  # Total price based on quantity
         date=timezone.now()  # Add a purchase date
     )
@@ -364,21 +376,37 @@ from .models import User, Product, Buy, Order  # Import Order model
 def user_buy1(req, pid):
     user = User.objects.get(username=req.session['user'])  # Fetch logged-in user
     product = Product.objects.get(pk=pid)
-    
-    # Check if there's stock available
-    if product.quantity > 0:
-        price = product.offer_price
-        buy = Buy.objects.create(user=user, product=product, price=price)
+
+    # Extract size and quantity from request (adjust depending on your form setup)
+    size = req.POST.get('size', 'M')  # Default to 'M' if not provided
+    quantity = int(req.POST.get('quantity', 1))  # Default to 1 if not provided
+
+    # Check if there's enough stock available
+    if product.quantity >= quantity:
+        price = product.offer_price * quantity  # Adjust price based on quantity
+        
+        # Create Buy object with size and quantity
+        buy = Buy.objects.create(user=user, product=product, price=price, size=size, quantity=quantity)
         buy.save()
 
-        # Decrease the stock of the product
-        product.quantity -= 1
+        # Decrease stock
+        product.quantity -= quantity
         product.save()
 
-        return redirect('order_create')  # or wherever you want to redirect after purchase
+        return redirect('order_create')  # Redirect after purchase
     else:
-        messages.error(req, "Sorry, this product is out of stock.")
-        return redirect('view_cart')  
+        messages.error(req, "Sorry, not enough stock available.")
+        return redirect('view_cart')
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -393,6 +421,8 @@ def user_bookings(request):
     bookings = Buy.objects.filter(user=user)  # Correct query
 
     return render(request, 'user/bookings.html', {'buy': bookings})
+
+
 
 
 

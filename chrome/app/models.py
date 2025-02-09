@@ -60,6 +60,8 @@ class Buy(models.Model):
     product=models.ForeignKey(Product,on_delete=models.CASCADE)
     price=models.IntegerField()
     date=models.DateField(auto_now_add=True)
+    size = models.CharField(max_length=10, choices=[('S', 'Small'), ('M', 'Medium'), ('L', 'Large')], default='M')  # Default size is Medium
+    quantity = models.PositiveIntegerField(default=1)  # Default quantity is 1
     
 
 
