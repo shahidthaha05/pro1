@@ -162,18 +162,18 @@
 
         <!-- Bookings List -->
         <div class="row">
-            {% for booking in buy %}
+            {% for buy in buy %}
             <div class="col-md-6 col-lg-4 mb-4">
                 <div class="booking-card">
                     <div class="card-inner">
                         <div class="card-front">
-                            <img src="{{ booking.product.img.url }}" alt="{{ booking.product.name }}">
+                            <img src="{{ buy.product.img.url }}" alt="{{ booking.product.name }}">
                             <div class="booking-info">
-                                <h5>{{ booking.product.name }}</h5>
-                                <p><strong>Size:</strong> {{ booking.size }}</p>  
-                                <p><strong>Quantity:</strong> {{ booking.quantity }}</p> 
-                                <p><strong>Booking Date:</strong> {{ booking.date|date:"F j, Y" }}</p>
-                                <p class="price">₹{{ booking.price }}</p>
+                                <h5>{{ buy.product.name }}</h5>
+                                <p><strong>Size:</strong> {{ buy.size }}</p>  
+                                <p><strong>Quantity:</strong> {{ buy.quantity }}</p> 
+                                <p><strong>Booking Date:</strong> {{ buy.date|date:"F j, Y" }}</p>
+                                <p class="price">₹{{ buy.price }}</p>
                                 <a href="#" class="glass-button">View Details</a>
                             </div>
                         </div>

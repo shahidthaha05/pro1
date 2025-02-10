@@ -238,12 +238,12 @@ def add_to_cart(req, pid):
         cart_item, created = Cart.objects.get_or_create(user=user, product=product, size=selected_size)
 
         if created:
-            cart_item.quantitty = quantity  # Set quantity for a new cart item
+            cart_item.quantity = quantity  # Set quantity for a new cart item
         else:
-            cart_item.quantitty += quantity  # Increase quantity if already in cart
+            cart_item.quantity += quantity  # Increase quantity if already in cart
 
         # Update total price
-        cart_item.total_price = cart_item.quantitty * product.offer_price  
+        cart_item.total_price = cart_item.quantity * product.offer_price  
         cart_item.save()
 
         return redirect('view_cart')
@@ -279,7 +279,7 @@ def view_cart(request):
     # Calculate the total price for each cart item
     total_price = 0  # To calculate total price of all items in the cart
     for item in cart_det:
-        item.total_price = item.product.offer_price * item.quantitty  # Calculate total price for each item
+        item.total_price = item.product.offer_price * item.quantity  # Calculate total price for each item
         total_price += item.total_price  # Add it to the grand total
 
     return render(request, 'user/view_cart.html', {'cart_det': cart_det, 'total_price': total_price})
@@ -328,42 +328,47 @@ def user_buy(request, cid):
     product = cart_item.product
 
     # Check if stock is available
-    if cart_item.quantitty > product.quantity:
+    if cart_item.quantity > product.quantity:
         messages.error(request, f"Not enough stock available for {product.name}! Only {product.quantity} left.")
         return redirect('view_cart')
 
     # Reduce stock permanently
-    product.quantity -= cart_item.quantitty
+    product.quantity -= cart_item.quantity
     product.save()
 
     # Create an Order object
     order = Order.objects.create(
         name=request.user.username,  
         email=request.user.email,    
-        phone_number="1234567890",  # Replace with actual user phone number
-        shipping_address="Default Address",  # Replace with actual user shipping address
+        phone_number="1234567890",
+        shipping_address="Default Address",
         status="Processing",
         created_at=timezone.now(),
     )
 
+    # Ensure quantity is not NULL
+    quantity = request.POST.get("quantity")
+    if quantity:
+        quantity = int(quantity)
+    else:
+        quantity = cart_item.quantity  # Default to cart quantity
 
-
-
-    # Save the order in `Buy` instead of `Booking`
-    order=Buy.objects.create(
+    # Save the order in `Buy`
+    order = Buy.objects.create(
         user=request.user,
         product=product,
-        size=request.POST.get("size"),
-        quantity=request.POST.get("quantity"),
-        price=product.offer_price * cart_item.quantitty,  # Total price based on quantity
-        date=timezone.now()  # Add a purchase date
+        # size=request.POST.get("size"),
+        quantity=quantity,  # Ensure it's always set
+        price=product.offer_price * cart_item.quantity,
+        date=timezone.now()
     )
 
     # Remove the item from the cart after purchase
     cart_item.delete()
 
     messages.success(request, f"Order placed successfully for {product.name}!")
-    return redirect('order_create')  
+    return redirect('order_create')
+
 
 
 
@@ -376,6 +381,10 @@ from .models import User, Product, Buy, Order  # Import Order model
 def user_buy1(req, pid):
     user = User.objects.get(username=req.session['user'])  # Fetch logged-in user
     product = Product.objects.get(pk=pid)
+
+
+
+    
 
     # Extract size and quantity from request (adjust depending on your form setup)
     size = req.POST.get('size', 'M')  # Default to 'M' if not provided
@@ -478,8 +487,8 @@ def update_cart_quantity(request):
                 return redirect('view_cart')
 
             # ✅ Update the cart item with the new quantity
-            cart_item.quantitty = new_quantity
-            cart_item.total_price = cart_item.quantitty * product.offer_price  # Recalculate total price
+            cart_item.quantity = new_quantity
+            cart_item.total_price = cart_item.quantity * product.offer_price  # Recalculate total price
             cart_item.save()
 
             messages.success(request, f"Quantity updated to {new_quantity}.")
