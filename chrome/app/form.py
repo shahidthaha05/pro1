@@ -23,4 +23,3 @@ class ProductForm(forms.ModelForm):
         fields = ['pro_id', 'name', 'base_price', 'offer_price', 'img', 'dis', 'sizes', 'quantity']
 
 
-

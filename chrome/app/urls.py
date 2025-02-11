@@ -1,7 +1,13 @@
 from django.urls import path
 from . import views
+from .views import (
+    CustomPasswordResetView,
+    CustomPasswordResetDoneView,
+    CustomPasswordResetConfirmView,
+    CustomPasswordResetCompleteView,
+)
 urlpatterns=[
-    path('',views.chrome_login),
+    path('',views.chrome_login,name='chrome_login'),
     path('chrome_login1/', views.chrome_login1, name='chrome_login1'),
     path('home/',views.home,name='home'),
     path('intro',views.intro),
@@ -11,6 +17,13 @@ urlpatterns=[
     path('delete/<pid>',views.delete,name='delete'),
     path('bookings/',views.bookings,name='bookings'),
     
+
+
+
+    path('password_reset/', CustomPasswordResetView.as_view(), name='password_reset'),
+    path('password_reset_done/', CustomPasswordResetDoneView.as_view(), name='pass_reset_done'),
+    path('reset/<uidb64>/<token>/', CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('reset/done/', CustomPasswordResetCompleteView.as_view(), name='pass_reset_complete'),
 
 
 

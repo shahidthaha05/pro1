@@ -142,6 +142,8 @@
       <p>Don't have an account? <a href="register">Register</a></p>
     </div>
 
+    <a href="{% url 'password_reset' %}" class="btn-link">Forgot Password?</a>
+
     {% if messages %}
       {% for message in messages %}
         <div class="alert alert-dismissible">
@@ -151,5 +153,16 @@
       {% endfor %}
     {% endif %}
   </div>
+
+
+      <script>
+        // Toggle password visibility
+        function togglePassword() {
+            const passwordField = document.getElementById('passwd');
+            const type = passwordField.type === 'password' ? 'text' : 'password';
+            passwordField.type = type;
+        }
+    </script>
+
 </body>
 </html>
