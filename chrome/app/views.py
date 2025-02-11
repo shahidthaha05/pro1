@@ -147,17 +147,16 @@ def delete(req,pid):
 from django.shortcuts import render
 from .models import Buy, Booking, Order
 
+# views.py
 def bookings(request):
-    # Get all Buy objects with related product and user data
-    buy = Buy.objects.select_related('product', 'user').all().order_by('-date')
+    buys = Buy.objects.all().select_related('product','user').all().order_by('-date')  # Example of ordering by date
+    orders = Order.objects.all().order_by('-created_at')  # Example of ordering orders by created_at
     
-    # Get all Order objects related to the Buy objects (assuming there's a way to link Buy to Order)
-    orders = Order.objects.all()
-
-    # Create combined data
-    combined_data = zip(buy, orders)
-
+    combined_data = zip(buys, orders)  # Ensure they align correctly
+    
     return render(request, 'shop/bookings.html', {'combined_data': combined_data})
+
+
 
 
 
@@ -204,6 +203,23 @@ class CustomPasswordResetCompleteView(PasswordResetCompleteView):
 
 
 
+
+from django.shortcuts import redirect
+from .models import Buy
+
+from django.shortcuts import redirect
+from .models import Buy
+
+def delete_all_bookings(request):
+    if request.method == "POST":
+        # Delete all Buy objects (associated with bookings)
+        Buy.objects.all().delete()
+        # Redirect to the bookings page after deletion
+        return redirect('bookings')  # Adjust this URL name to match your URL pattern
+    else:
+        # In case the method is not POST, you might want to handle it gracefully
+        # For now, we will just redirect to bookings page
+        return redirect('bookings')  # Redirect to the bookings page
 
 
 

@@ -16,6 +16,7 @@ urlpatterns=[
     path('edit/<pid>',views.edit,name='edit'),
     path('delete/<pid>',views.delete,name='delete'),
     path('bookings/',views.bookings,name='bookings'),
+    path('delete_all_bookings/', views.delete_all_bookings, name='delete_all_bookings'),
     
 
 

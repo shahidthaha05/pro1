@@ -63,6 +63,7 @@ class Buy(models.Model):
     size = models.CharField(max_length=10, choices=[('S', 'Small'), ('M', 'Medium'), ('L', 'Large')], default='M')  # Default size is Medium
     quantity = models.PositiveIntegerField(default=1)  # Default quantity is 1
     
+    
 
 
 
@@ -73,6 +74,7 @@ class Order(models.Model):
     shipping_address = models.TextField()
     status = models.CharField(max_length=20, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
+    
 
 
 

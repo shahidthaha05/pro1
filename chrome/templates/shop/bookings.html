@@ -15,7 +15,6 @@
             font-family: 'Poppins', sans-serif;
         }
 
-        /* Navbar */
         .navbar {
             background-color: #222;
             padding: 15px;
@@ -30,13 +29,11 @@
             color: #ffc107 !important;
         }
 
-        /* Content Area */
         .content {
             padding: 20px;
             margin-top: 80px;
         }
 
-        /* Search Bar */
         .search-bar {
             width: 300px;
             padding: 10px;
@@ -44,7 +41,6 @@
             border-radius: 5px;
         }
 
-        /* Table Styling */
         .table-container {
             background: #222;
             padding: 20px;
@@ -57,15 +53,10 @@
             color: #fff;
         }
 
-        .table tbody tr {
-            transition: 0.3s;
-        }
-
         .table tbody tr:hover {
             background-color: #292929;
         }
 
-        /* Product Image */
         .product-img {
             width: 60px;
             height: 60px;
@@ -74,7 +65,6 @@
             margin-right: 10px;
         }
 
-        /* Status Badges */
         .status-badge {
             padding: 5px 10px;
             border-radius: 5px;
@@ -127,7 +117,12 @@
     <div class="content">
         <div class="d-flex justify-content-between align-items-center">
             <h2>Bookings</h2>
-            <input type="text" id="search" class="search-bar" placeholder="Search Bookings...">
+            <div>
+                <button id="deleteAllBtn" class="btn btn-danger" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
+                    Delete All Bookings
+                </button>
+                <input type="text" id="search" class="search-bar" placeholder="Search Bookings...">
+            </div>
         </div>
 
         <div class="table-container mt-4">
@@ -140,6 +135,8 @@
                         <th>Customer</th>
                         <th>Email</th>
                         <th>Phone</th>
+                        <th>Size</th>
+                        <th>Quantity</th>
                         <th>Address</th>
                         <th>Status</th>
                     </tr>
@@ -156,6 +153,8 @@
                         <td>{{ order.name }}</td>
                         <td>{{ order.email }}</td>
                         <td>{{ order.phone_number }}</td>
+                        <td>{{ buy.size }}</td>
+                        <td>{{ buy.quantity }}</td>
                         <td>{{ order.shipping_address }}</td>
                         <td>
                             <span class="status-badge 
@@ -169,7 +168,30 @@
                     </tr>
                     {% endfor %}
                 </tbody>
+                
+                
             </table>
+        </div>
+    </div>
+
+    <!-- Modal for Deletion Confirmation -->
+    <div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="confirmDeleteModalLabel">Delete All Bookings</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete all bookings? This action cannot be undone.
+                </div>
+                <form method="POST" action="{% url 'delete_all_bookings' %}">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        Delete All Bookings
+                    </button>
+                </form>
+            </div>
         </div>
     </div>
 
@@ -188,3 +210,4 @@
 
 </body>
 </html>
+
