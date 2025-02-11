@@ -7,8 +7,8 @@ from .views import (
     CustomPasswordResetCompleteView,
 )
 urlpatterns=[
-    path('',views.chrome_login,name='chrome_login'),
-    path('chrome_login1/', views.chrome_login1, name='chrome_login1'),
+    path('',views.intro),
+    path('chrome_login',views.chrome_login,name='chrome_login'),
     path('home/',views.home,name='home'),
     path('intro',views.intro),
     path('chrome_logout',views.chrome_logout,name='chrome_logout'),

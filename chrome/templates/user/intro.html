@@ -212,10 +212,8 @@
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
-                    <li class="nav-item"><a class="nav-link" href="view_cart">Cart</a></li>
-                    <li class="nav-item"><a class="nav-link" href="user_bookings">Bookings</a></li>
-                    <li class="nav-item"><a class="nav-link" href="chrome_logout">Log Out</a></li>
+                   
+                    <li class="nav-item"><a class="nav-link" href="chrome_login">Log IN</a></li>
                 </ul>
             </div>
         </div>
@@ -233,7 +231,7 @@
         <div class="row row-cols-1 row-cols-md-3 row-cols-lg-4">
             {% for product in data %}
                 <div class="col">
-                    <a href="view_pro/{{product.pk}}">
+                    <a href="chrome_login">
                         <div class="card">
                             <img class="card-img-top" src="{{product.img.url}}" alt="{{product.name}}">
                             <div class="card-body">
