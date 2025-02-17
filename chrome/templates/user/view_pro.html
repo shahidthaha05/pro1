@@ -154,10 +154,41 @@
                 </form>
 
                 <div class="actions">
-                    <a href="../user_buy1/{{ data.pk }}" class="buy-now">BUY NOW</a>
+                    <!-- This will be dynamically updated with the selected size -->
+                    <a href="#" id="buy-now" class="buy-now">BUY NOW</a>
                 </div>
             </div>
         </div>
     </div>
+
+    <script>
+        // Function to update the "BUY NOW" link with the selected size
+        document.getElementById('size').addEventListener('change', function() {
+            var selectedSizeId = this.value;  // Get the selected size ID
+            var buyNowLink = document.getElementById('buy-now');
+            
+            // Find the selected size name by iterating through the options
+            var selectedSizeName = this.options[this.selectedIndex].text;
+    
+            // Update the 'href' of the "BUY NOW" link with the selected size
+            buyNowLink.href = "../user_buy1/{{ data.pk }}?size=" + selectedSizeName;  // Use the size name in URL
+            
+            // Optionally, display the selected size name on the page or console
+            console.log("Selected size:", selectedSizeName);  // Prints "Small", "Medium", "Large", etc.
+        });
+    
+        // Trigger the update on page load (in case the user refreshes the page)
+        window.onload = function() {
+            var selectedSizeId = document.getElementById('size').value;
+            var selectedSizeName = document.getElementById('size').options[document.getElementById('size').selectedIndex].text;
+            
+            // Update the "BUY NOW" link with the selected size ID
+            document.getElementById('buy-now').href = "../user_buy1/{{ data.pk }}?size=" + selectedSizeName;  // Use the size name in URL
+            
+            // Optionally, display the selected size name on the page or console
+            console.log("Selected size on load:", selectedSizeName);  // Prints "Small", "Medium", "Large", etc.
+        };
+    </script>
+    
 </body>
 </html>

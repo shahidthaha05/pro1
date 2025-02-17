@@ -431,24 +431,19 @@ def user_buy(request, cid):
 
 
 
-
-
-
 from django.contrib import messages
 from django.shortcuts import redirect
-from .models import User, Product, Buy, Order  # Import Order model
+from .models import User, Product, Buy
 
 def user_buy1(req, pid):
     user = User.objects.get(username=req.session['user'])  # Fetch logged-in user
     product = Product.objects.get(pk=pid)
 
+    # Extract size and quantity from the request
+    size = req.GET.get('size', 'M')  # Get size from URL parameter, default to 'M' if not provided
+    quantity = int(req.GET.get('quantity', 1))  # Default to 1 if not provided in the URL
 
-
-    
-
-    # Extract size and quantity from request (adjust depending on your form setup)
-    size = req.POST.get('size', 'M')  # Default to 'M' if not provided
-    quantity = int(req.POST.get('quantity', 1))  # Default to 1 if not provided
+    print(f"Selected size: {size}")  # Debugging print
 
     # Check if there's enough stock available
     if product.quantity >= quantity:
@@ -465,7 +460,7 @@ def user_buy1(req, pid):
         return redirect('order_create')  # Redirect after purchase
     else:
         messages.error(req, "Sorry, not enough stock available.")
-        return redirect('view_cart')
+        return redirect('view_cart')  # Redirect to view cart if stock is not enough
 
 
 
