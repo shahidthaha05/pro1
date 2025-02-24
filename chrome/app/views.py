@@ -157,6 +157,9 @@ def update_order_status(request, order_id, new_status):
     order.save()
     return redirect('bookings')  # Redirect to the admin bookings page
 
+from django.shortcuts import render
+from .models import Buy, Order
+
 def bookings(request):
     buys = Buy.objects.all().select_related('product', 'user').order_by('-date')
     orders = Order.objects.all().order_by('-created_at')
@@ -166,26 +169,32 @@ def bookings(request):
 
 
 
+
+
+
+
 # views.py
 
+
+
 from django.shortcuts import get_object_or_404, redirect
-from .models import Order, Buy
-from django.contrib import messages
+from .models import Booking
 
-def delete_order(request, order_id, product_id):
-    if not request.user.is_superuser:
-        messages.error(request, "You do not have permission to delete orders.")
-        return redirect('admin_bookings')
+# views.py
+from django.shortcuts import render, get_object_or_404, redirect
+from .models import Buy
 
-    # Fetch the order and product
-    order = get_object_or_404(Order, id=order_id)
-    product = get_object_or_404(Buy, id=product_id, order=order)
+def delete_booking(request, id):
+    # Get the Buy object or return 404 if not found
+    booking = get_object_or_404(Buy, id=id)
+    
+    # Delete the booking
+    booking.delete()
+    
+    # Redirect back to the bookings page
+    return redirect('bookings')  # Make sure 'bookings' is the name of the bookings page URL
 
-    # Delete the product from the order
-    product.delete()
 
-    messages.success(request, "Product deleted from order successfully!")
-    return redirect('admin_bookings')  # Redirect back to the admin booking page
 
 
 
