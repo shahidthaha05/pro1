@@ -148,17 +148,44 @@ from django.shortcuts import render
 from .models import Buy, Booking, Order
 
 # views.py
+from django.shortcuts import render, redirect
+from .models import Order, Buy
+
+def update_order_status(request, order_id, new_status):
+    order = Order.objects.get(id=order_id)
+    order.status = new_status
+    order.save()
+    return redirect('bookings')  # Redirect to the admin bookings page
+
 def bookings(request):
-    buys = Buy.objects.all().select_related('product','user').all().order_by('-date')  # Example of ordering by date
-    orders = Order.objects.all().order_by('-created_at')  # Example of ordering orders by created_at
-    
-    combined_data = zip(buys, orders)  # Ensure they align correctly
-    
+    buys = Buy.objects.all().select_related('product', 'user').order_by('-date')
+    orders = Order.objects.all().order_by('-created_at')
+    combined_data = zip(buys, orders)
     return render(request, 'shop/bookings.html', {'combined_data': combined_data})
 
 
 
 
+# views.py
+
+from django.shortcuts import get_object_or_404, redirect
+from .models import Order, Buy
+from django.contrib import messages
+
+def delete_order(request, order_id, product_id):
+    if not request.user.is_superuser:
+        messages.error(request, "You do not have permission to delete orders.")
+        return redirect('admin_bookings')
+
+    # Fetch the order and product
+    order = get_object_or_404(Order, id=order_id)
+    product = get_object_or_404(Buy, id=product_id, order=order)
+
+    # Delete the product from the order
+    product.delete()
+
+    messages.success(request, "Product deleted from order successfully!")
+    return redirect('admin_bookings')  # Redirect back to the admin booking page
 
 
 
@@ -202,24 +229,6 @@ class CustomPasswordResetCompleteView(PasswordResetCompleteView):
 
 
 
-
-
-from django.shortcuts import redirect
-from .models import Buy
-
-from django.shortcuts import redirect
-from .models import Buy
-
-def delete_all_bookings(request):
-    if request.method == "POST":
-        # Delete all Buy objects (associated with bookings)
-        Buy.objects.all().delete()
-        # Redirect to the bookings page after deletion
-        return redirect('bookings')  # Adjust this URL name to match your URL pattern
-    else:
-        # In case the method is not POST, you might want to handle it gracefully
-        # For now, we will just redirect to bookings page
-        return redirect('bookings')  # Redirect to the bookings page
 
 
 
@@ -387,6 +396,9 @@ def user_buy(request, cid):
     cart_item = get_object_or_404(Cart, id=cid, user=request.user)
     product = cart_item.product
 
+    # Get the size from the cart item or default to 'M' if not available
+    size = cart_item.size if cart_item.size else 'M'
+
     # Check if stock is available
     if cart_item.quantity > product.quantity:
         messages.error(request, f"Not enough stock available for {product.name}! Only {product.quantity} left.")
@@ -406,19 +418,12 @@ def user_buy(request, cid):
         created_at=timezone.now(),
     )
 
-    # Ensure quantity is not NULL
-    quantity = request.POST.get("quantity")
-    if quantity:
-        quantity = int(quantity)
-    else:
-        quantity = cart_item.quantity  # Default to cart quantity
-
-    # Save the order in `Buy`
-    order = Buy.objects.create(
+    # Save the order in `Buy` (with size info)
+    buy = Buy.objects.create(
         user=request.user,
         product=product,
-        # size=request.POST.get("size"),
-        quantity=quantity,  # Ensure it's always set
+        size=size,  # Add the size to the Buy object
+        quantity=cart_item.quantity,  # Quantity from the cart
         price=product.offer_price * cart_item.quantity,
         date=timezone.now()
     )
@@ -426,8 +431,9 @@ def user_buy(request, cid):
     # Remove the item from the cart after purchase
     cart_item.delete()
 
-    messages.success(request, f"Order placed successfully for {product.name}!")
+    messages.success(request, f"Order placed successfully for {product.name} in size {size}!")
     return redirect('order_create')
+
 
 
 
@@ -477,14 +483,36 @@ def user_buy1(req, pid):
 
 from django.shortcuts import render
 from .models import Buy
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Buy
+
+
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Buy
 
 def user_bookings(request):
     user = request.user  # Get the currently logged-in user
 
     # Fetch bookings related to this user
-    bookings = Buy.objects.filter(user=user)  # Correct query
+    bookings = Buy.objects.filter(user=user)
+
+    if request.method == 'POST':
+        # If a cancel request is made
+        booking_id = request.POST.get('cancel_booking_id')
+        try:
+            booking = Buy.objects.get(id=booking_id, user=user)
+            # You can choose to either delete or update the status to 'Cancelled'
+            booking.delete()  # Or use booking.update(status='Cancelled') instead
+            messages.success(request, "Your booking has been successfully canceled.")
+        except Buy.DoesNotExist:
+            messages.error(request, "Booking not found or you don't have permission to cancel this booking.")
+
+        return redirect('user_bookings')  # Reload the bookings page after cancellation
 
     return render(request, 'user/bookings.html', {'buy': bookings})
+
 
 
 

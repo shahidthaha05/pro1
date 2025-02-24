@@ -16,7 +16,8 @@ urlpatterns=[
     path('edit/<pid>',views.edit,name='edit'),
     path('delete/<pid>',views.delete,name='delete'),
     path('bookings/',views.bookings,name='bookings'),
-    path('delete_all_bookings/', views.delete_all_bookings, name='delete_all_bookings'),
+    path('delete_order/<int:order_id>/<int:product_id>/', views.delete_order, name='delete_order'),
+    path('update_order_status/<int:order_id>/<str:new_status>/', views.update_order_status, name='update_order_status'),
     
 
 
@@ -36,7 +37,7 @@ urlpatterns=[
     path('delete_cart/<int:id>/', views.delete_cart, name='delete_cart'),
     path('user_buy/<cid>',views.user_buy,name='user_buy'),
     path('user_buy1/<pid>',views.user_buy1,name='user_buy1'),
-    path('user_bookings',views.user_bookings,name='user_bookings'),
+    path('user_bookings/',views.user_bookings,name='user_bookings'),
     path('user_buy/<int:cid>/', views.user_buy, name='user_buy'),
     path('order/', views.order_create, name='order_create'),
     path('order/success/', views.order_success, name='order_success'),

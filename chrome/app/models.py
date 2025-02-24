@@ -62,6 +62,7 @@ class Buy(models.Model):
     date=models.DateField(auto_now_add=True)
     size = models.CharField(max_length=10, choices=[('S', 'Small'), ('M', 'Medium'), ('L', 'Large')], default='M')  # Default size is Medium
     quantity = models.PositiveIntegerField(default=1)  # Default quantity is 1
+    status = models.CharField(max_length=50, choices=[('Pending', 'Pending'), ('Confirmed', 'Confirmed'), ('Cancelled', 'Cancelled')], default='Pending')
     
     
 
