@@ -535,16 +535,60 @@ from django.shortcuts import render, redirect
 from .form import OrderForm
 from .models import Order
 
+import razorpay
+from django.conf import settings
+from django.shortcuts import render, redirect
+from .form import OrderForm
+from .models import Order  # Assuming you have an Order model
+
+# Razorpay client setup
+razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
 def order_create(request):
     if request.method == 'POST':
         form = OrderForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('order_success')  # Redirect to success page
+            # Save the order form and create a new order in the database
+            order = form.save()
+
+            # Step 1: Create an order on Razorpay
+            amount = 1000  # Calculate the total amount for the order, here it's 1000 paise (₹10)
+            currency = 'INR'
+            order_data = {
+                'amount': amount * 100,  # Razorpay expects the amount in paise (100 paise = 1 INR)
+                'currency': currency,
+                'payment_capture': '1',  # 1 means automatic payment capture after successful payment
+            }
+
+            # Create the Razorpay order
+            try:
+                razorpay_order = razorpay_client.order.create(data=order_data)
+                # Save the Razorpay order ID in your order model
+                order.razorpay_order_id = razorpay_order['id']
+                order.save()
+
+                # Step 2: Pass the Razorpay order details to the template for frontend
+                context = {
+                    'order': order,
+                    'razorpay_key_id': settings.RAZORPAY_KEY_ID,
+                    'razorpay_order_id': razorpay_order['id'],
+                    'razorpay_amount': amount * 100,  # Amount in paise
+                    'razorpay_currency': currency,
+                }
+
+                # Render the payment page for the user to complete the payment
+                return render(request, 'user/payment_page.html', context)
+
+            except razorpay.errors.BadRequestError as e:
+                # Handle error if something goes wrong with creating the order on Razorpay
+                return render(request, 'user/error_page.html', {'error': str(e)})
+
     else:
         form = OrderForm()
-    
+
     return render(request, 'user/book_product.html', {'form': form})
+
+
 
 def order_success(request):
     return render(request, 'user/order_success.html')
@@ -595,6 +639,116 @@ def update_cart_quantity(request):
 
     return redirect('view_cart')
 
+
+
+
+
+# views.py
+from django.shortcuts import render, redirect
+from .models import Order, Buy
+import razorpay
+
+def payment_view(request, order_id):
+    try:
+        # Fetch the order from the database using the order_id
+        order = Order.objects.get(id=order_id)
+    except Order.DoesNotExist:
+        return render(request, 'error.html', {'message': 'Order not found'})
+
+    # Fetch the associated 'buy' object (assuming it's related to the Order object)
+    try:
+        buy = Buy.objects.get(order=order)  # Assuming Buy model has a foreign key to Order
+    except Buy.DoesNotExist:
+        buy = None  # If there's no associated Buy object, set it to None
+
+    # Debugging information to check if 'buy' and related data are present
+    print("Buy object:", buy)
+    if buy:
+        print("Product details:", buy.product)
+        print("Quantity:", buy.quantity)
+        print("Total amount:", buy.total_amount)
+
+    # Razorpay configuration
+    razorpay_key_id = "your_razorpay_key_id"
+    razorpay_amount = order.total_amount * 100  # Convert to paise (1 INR = 100 paise)
+    razorpay_currency = "INR"
+    
+    # Create Razorpay order
+    razorpay_client = razorpay.Client(auth=("rzp_test_fGXBbOpWsXJ5K7", "8r97uL39w4etyjunuKYO4tpE"))
+    razorpay_order = razorpay_client.order.create(dict(
+        amount=razorpay_amount,
+        currency=razorpay_currency,
+        payment_capture='1'
+    ))
+
+    context = {
+        'buy': buy,  # Passing the buy object (which should include the product details)
+        'razorpay_key_id': razorpay_key_id,
+        'razorpay_amount': razorpay_amount,
+        'razorpay_currency': razorpay_currency,
+        'razorpay_order_id': razorpay_order['id'],
+        'user': request.user
+    }
+
+    return render(request, 'user/payment.html', context)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import razorpay
+from django.conf import settings
+from django.shortcuts import render, redirect
+from django.views.decorators.csrf import csrf_exempt
+from django.http import JsonResponse
+
+# Razorpay client setup
+razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
+@csrf_exempt
+def payment_success(request):
+    if request.method == 'POST':
+        try:
+            # Extract the payment details sent by Razorpay
+            payment_id = request.POST.get('razorpay_payment_id')
+            order_id = request.POST.get('razorpay_order_id')
+            signature = request.POST.get('razorpay_signature')
+            
+            # Create a dictionary of payment verification details
+            params_dict = {
+                'razorpay_order_id': order_id,
+                'razorpay_payment_id': payment_id,
+                'razorpay_signature': signature
+            }
+
+            # Verify the payment signature
+            try:
+                razorpay_client.utility.verify_payment_signature(params_dict)
+                
+                # Handle success: Mark the order as paid in the database
+                order = Order.objects.get(razorpay_order_id=order_id)
+                order.payment_status = 'Paid'
+                order.payment_id = payment_id
+                order.save()
+
+                # Redirect or render the success page
+                return render(request, 'user/order_success.html', {'order': order})
+            except razorpay.errors.SignatureVerificationError:
+                return JsonResponse({'error': 'Payment verification failed'}, status=400)
+        except Exception as e:
+            return JsonResponse({'error': str(e)}, status=500)
 
 
 

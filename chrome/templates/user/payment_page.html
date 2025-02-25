@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f8f8f8;
+            margin: 0;
+            padding: 0;
+        }
+
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .container {
+            width: 80%;
+            margin: 50px auto;
+            background-color: white;
+            padding: 30px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+
+        .order-details {
+            font-size: 1.2em;
+            margin-bottom: 30px;
+        }
+
+        .order-details p {
+            margin: 10px 0;
+        }
+
+        .product-info {
+            margin-bottom: 20px;
+            padding: 10px;
+            background-color: #f2f2f2;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .product-info h3 {
+            margin: 0;
+            color: #333;
+        }
+
+        .product-info .product-item {
+            margin: 10px 0;
+            padding: 5px 0;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .amount {
+            font-weight: bold;
+            color: #333;
+            font-size: 1.5em;
+        }
+
+        .payment-btn-container {
+            text-align: center;
+        }
+
+        .payment-btn-container button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 30px;
+            font-size: 1.1em;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+
+        .payment-btn-container button:hover {
+            background-color: #45a049;
+        }
+
+        .payment-btn-container button:active {
+            background-color: #388e3c;
+        }
+
+        .home-btn-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+
+        .home-btn-container a {
+            background-color: #007BFF;
+            color: white;
+            padding: 10px 20px;
+            font-size: 1em;
+            text-decoration: none;
+            border-radius: 5px;
+        }
+
+        .home-btn-container a:hover {
+            background-color: #0056b3;
+        }
+
+        footer {
+            text-align: center;
+            margin-top: 50px;
+            color: #777;
+            font-size: 0.9em;
+        }
+
+        footer a {
+            text-decoration: none;
+            color: #4CAF50;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Payment Page</h1>
+</header>
+
+<div class="container">
+    <h2>Order Confirmation</h2>
+
+    <!-- Product Information -->
+    <div class="product-info">
+        <h3>Product Details</h3>
+        {% if order %}
+            {% if order.product %}
+                <div class="product-item">
+                    <span><strong>Product Name:</strong></span>
+                    <span>{{ order.product.name }}</span> <!-- Display Product Name -->
+                </div>
+                <div class="product-item">
+                    <span><strong>Quantity:</strong></span>
+                    <span>{{ buy.quantity }}</span> <!-- Display Quantity -->
+                </div>
+                <div class="product-item">
+                    <span><strong>Product Description:</strong></span>
+                    <span>{{ buy.product.description }}</span> <!-- Display Product Description -->
+                </div>
+                <div class="product-item">
+                    <span><strong>Size:</strong></span>
+                    <span>{{ buy.size }}</span> <!-- Display Size -->
+                </div>
+            {% else %}
+                <p>No product details available.</p>
+            {% endif %}
+        {% else %}
+            <p>No product details available.</p>
+        {% endif %}
+    </div>
+
+    <!-- Order Summary -->
+    {% if order %}
+        <div class="order-details">
+            <p><strong>Order ID:</strong> {{ order.id }}</p> <!-- Display Order ID -->
+            <p><strong>Amount:</strong> ₹{{ order.ofr_price }}</p> <!-- Display Total Amount -->
+        </div>
+    {% else %}
+        <p>No order details available.</p>
+    {% endif %}
+
+    <!-- Razorpay payment form -->
+    <div class="payment-btn-container">
+        <form action="/payment-success/" method="POST" id="payment-form">
+            <script
+                src="https://checkout.razorpay.com/v1/checkout.js"
+                data-key="{{ razorpay_key_id }}"
+                data-amount="{{ razorpay_amount }}"
+                data-currency="{{ razorpay_currency }}"
+                data-order_id="{{ razorpay_order_id }}"
+                data-buttontext="Pay Now"
+                data-name="chrome culture"
+                data-description="Order Payment"
+                data-image="https://yourlogo.com/logo.png"
+                data-prefill.name="{{ user.first_name }}"
+                data-prefill.email="{{ user.email }}"
+                data-theme.color="#F37254">
+            </script>
+        </form>
+    </div>
+
+    <!-- Home Button -->
+    <div class="home-btn-container">
+        <a href="{% url 'user_home' %}">Go to Home</a>
+    </div>
+</div>
+
+</body>
+</html>
