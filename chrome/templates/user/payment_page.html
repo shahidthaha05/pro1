@@ -129,11 +129,11 @@
     <!-- Product Information -->
     <div class="product-info">
         <h3>Product Details</h3>
-        {% if order %}
-            {% if order.product %}
+        {% if buy %}
+            {% if buy.product %}
                 <div class="product-item">
                     <span><strong>Product Name:</strong></span>
-                    <span>{{ order.product.name }}</span> <!-- Display Product Name -->
+                    <span>{{ buy.product.name }}</span> <!-- Display Product Name -->
                 </div>
                 <div class="product-item">
                     <span><strong>Quantity:</strong></span>
@@ -147,9 +147,9 @@
                     <span><strong>Size:</strong></span>
                     <span>{{ buy.size }}</span> <!-- Display Size -->
                 </div>
-            {% else %}
+            <!-- {% else %}
                 <p>No product details available.</p>
-            {% endif %}
+            {% endif %} -->
         {% else %}
             <p>No product details available.</p>
         {% endif %}

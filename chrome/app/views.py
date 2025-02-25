@@ -690,7 +690,7 @@ def payment_view(request, order_id):
         'user': request.user
     }
 
-    return render(request, 'user/payment.html', context)
+    return render(request, 'user/payment_page.html', context)
 
 
 
@@ -745,6 +745,7 @@ def payment_success(request):
 
                 # Redirect or render the success page
                 return render(request, 'user/order_success.html', {'order': order})
+            
             except razorpay.errors.SignatureVerificationError:
                 return JsonResponse({'error': 'Payment verification failed'}, status=400)
         except Exception as e:
