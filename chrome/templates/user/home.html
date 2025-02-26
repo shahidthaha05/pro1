@@ -184,7 +184,7 @@
                     <li class="nav-item"><a class="nav-link" href="#">Home</a></li>
                     <li class="nav-item"><a class="nav-link" href="view_cart">Cart</a></li>
                     <li class="nav-item"><a class="nav-link" href="user_bookings">Bookings</a></li>
-                    <li class="nav-item"><a class="nav-link" href="chrome_logout">Log Out</a></li>
+                    <li class="nav-item"><a class="nav-link" href="chrome_logout" onclick="return confirmLogout()">Log Out</a></li>
                 </ul>
             </div>
         </div>
@@ -222,6 +222,16 @@
     <div class="footer">
         <p>&copy; 2025 Chrome Store. All Rights Reserved. <a href="privacy-policy.html">Privacy Policy</a></p>
     </div>
+
+
+
+
+    <script>
+        // Confirm Logout Function
+        function confirmLogout() {
+            return confirm("Are you sure you want to logout?");
+        }
+    </script>
 
 </body>
 </html>
