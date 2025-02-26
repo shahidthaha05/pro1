@@ -753,3 +753,30 @@ def payment_success(request):
 
 
 
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from .models import Buy, Product
+
+def cancel_booking(request, buy_id):
+    # Get the Buy instance using the buy_id
+    buy = get_object_or_404(Buy, id=buy_id)
+
+    # Ensure the buy record belongs to the current user
+    if buy.user != request.user:
+        messages.error(request, "You can only cancel your own bookings.")
+        return redirect('user_bookings')
+    
+    # Get the product related to this buy record
+    product = buy.product
+
+    # Add the quantity of the canceled buy back to the product stock
+    product.quantity += buy.quantity
+    product.save()
+
+    # Delete the Buy record (cancel the booking)
+    buy.delete()
+
+    # Show success message to the user
+    messages.success(request, "Your booking has been successfully canceled and the stock has been updated.")
+
+    return redirect('user_bookings')

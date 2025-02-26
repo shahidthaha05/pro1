@@ -41,6 +41,7 @@ urlpatterns=[
     path('user_buy/<int:cid>/', views.user_buy, name='user_buy'),
     path('order/', views.order_create, name='order_create'),
     path('order/success/', views.order_success, name='order_success'),
+    path('cancel_booking/<int:buy_id>/', views.cancel_booking, name='cancel_booking'),
     path('payment-success/', views.payment_success, name='payment_success'),
     path("update_cart_quantity/", views.update_cart_quantity, name="update_cart_quantity"),
     path('payment/<int:order_id>/', views.payment_view, name='payment_page'),
