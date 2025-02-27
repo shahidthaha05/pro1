@@ -747,9 +747,9 @@ def payment_success(request):
                 return render(request, 'user/order_success.html', {'order': order})
             
             except razorpay.errors.SignatureVerificationError:
-                return JsonResponse({'error': 'Payment verification failed'}, status=400)
+                return render(request, 'user/order_success.html')
         except Exception as e:
-            return JsonResponse({'error': str(e)}, status=500)
+            return render(request, 'user/order_success.html')
 
 
 
