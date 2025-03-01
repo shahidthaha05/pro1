@@ -143,5 +143,5 @@ DEFAULT_FROM_EMAIL = 'Your App <your-email@example.com>'
 
 
 
-RAZORPAY_KEY_ID = "rzp_test_WSbRrgv55ycao2"
-RAZORPAY_KEY_SECRET = "6FgwvMjKXZOxR3bdd9w6AmdZ"
+RAZORPAY_KEY_ID = "rzp_test_CiBzZpmWFE6EjP"
+RAZORPAY_KEY_SECRET = "atx1utL3yGcikbzaoCnnoKrU"

@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Login Page</title>
-  <link rel="stylesheet" href="styles.css">
   <style>
     * {
       margin: 0;
@@ -100,6 +99,19 @@
       text-decoration: underline;
     }
 
+    /* Forgot Password Link */
+    .forgot-password {
+      display: block;
+      margin-top: 15px;
+      font-size: 14px;
+      color: #4CAF50; /* Green color for forgot password link */
+      text-decoration: none;
+    }
+
+    .forgot-password:hover {
+      text-decoration: underline;
+    }
+
     /* Alerts */
     .alert {
       background-color: #f8d7da;
@@ -142,7 +154,7 @@
       <p>Don't have an account? <a href="register">Register</a></p>
     </div>
 
-    <a href="{% url 'password_reset' %}" class="btn-link">Forgot Password?</a>
+    <a href="{% url 'password_reset' %}" class="forgot-password">Forgot Password?</a>
 
     {% if messages %}
       {% for message in messages %}
@@ -154,15 +166,13 @@
     {% endif %}
   </div>
 
-
-      <script>
-        // Toggle password visibility
-        function togglePassword() {
-            const passwordField = document.getElementById('passwd');
-            const type = passwordField.type === 'password' ? 'text' : 'password';
-            passwordField.type = type;
-        }
-    </script>
-
+  <script>
+    // Toggle password visibility
+    function togglePassword() {
+        const passwordField = document.getElementById('password');
+        const type = passwordField.type === 'password' ? 'text' : 'password';
+        passwordField.type = type;
+    }
+  </script>
 </body>
 </html>

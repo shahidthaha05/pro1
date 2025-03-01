@@ -54,6 +54,22 @@ class Cart(models.Model):
     def total_price(self):
         return self.product.offer_price * self.quantity 
 
+from django.db import models
+
+class Order(models.Model):
+    name = models.CharField(max_length=100)
+    email = models.EmailField()
+    phone_number = models.CharField(max_length=15)
+    shipping_address = models.TextField()
+    status = models.CharField(max_length=20, default='Pending')  # This status will reflect the order's state (Pending/Processing/Completed)
+    created_at = models.DateTimeField(auto_now_add=True)
+    razorpay_order_id = models.CharField(max_length=255, null=True, blank=True)  # Store Razorpay order ID
+    payment_id = models.CharField(max_length=255, null=True, blank=True)  # Store payment ID from Razorpay
+    payment_status = models.CharField(max_length=20, choices=[('Paid', 'Paid'), ('Pending', 'Pending')], default='Pending')  # Store payment status
+
+    def __str__(self):
+        return f"Order {self.id} - {self.name}"
+
 
 class Buy(models.Model):
     user=models.ForeignKey(User,on_delete=models.CASCADE)
@@ -63,19 +79,12 @@ class Buy(models.Model):
     size = models.CharField(max_length=10, choices=[('S', 'Small'), ('M', 'Medium'), ('L', 'Large')], default='M')  # Default size is Medium
     quantity = models.PositiveIntegerField(default=1)  # Default quantity is 1
     status = models.CharField(max_length=50, choices=[('Pending', 'Pending'), ('Confirmed', 'Confirmed'), ('Cancelled', 'Cancelled')], default='Pending')
-    
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, null=True, blank=True)
     
 
 
 
-class Order(models.Model):
-    name = models.CharField(max_length=100)
-    email = models.EmailField()
-    phone_number = models.CharField(max_length=15)
-    shipping_address = models.TextField()
-    status = models.CharField(max_length=20, default='Pending')
-    created_at = models.DateTimeField(auto_now_add=True)
-    
+
 
 
 

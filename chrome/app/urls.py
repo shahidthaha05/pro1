@@ -29,7 +29,8 @@ urlpatterns=[
 
 
 
-    path('register/',views.register),
+    path('register/',views.register,name='register'),
+    path('verify_otp_reg',views.verify_otp_reg, name='verify_otp_reg'),
     path('user_home',views.user_home ,name='user_home'),
     path('view_pro/<pid>',views.view_pro,name='view_pro'),
     path('add_to_cart/<int:pid>/', views.add_to_cart, name='add_to_cart'),

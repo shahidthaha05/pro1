@@ -248,20 +248,54 @@ class CustomPasswordResetCompleteView(PasswordResetCompleteView):
 
 # ---------------user--------------
 
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.shortcuts import render, redirect
+from django.utils.crypto import get_random_string
+from django.core.mail import send_mail
+from django.conf import settings
+
 def register(req):
-    if req.method=='POST':
-        name=req.POST['name']
-        email=req.POST['email']
-        password=req.POST['password']
-        try:
-            data=User.objects.create_user(first_name=name,email=email,password=password,username=email)
-            data.save()
-            return redirect(chrome_login)
-        except:
-            messages.warning(req,'User already exists.')
-            return redirect(register)
-    else:
-        return render(req,'user/register.html')
+    if req.method == 'POST':
+        name = req.POST['name']
+        email = req.POST['email']
+        password = req.POST['password']
+        if User.objects.filter(email=email).exists():
+            messages.warning(req, "Email already registered")
+            return redirect('register')
+        otp = get_random_string(length=6, allowed_chars='0123456789')
+        req.session['otp'] = otp
+        req.session['email'] = email
+        req.session['name'] = name
+        req.session['password'] = password
+        send_mail(
+            'Your OTP Code',
+            f'Your OTP is: {otp}',
+            settings.EMAIL_HOST_USER, [email]
+        )
+        messages.success(req, "OTP sent to your email")
+        return redirect('verify_otp_reg')
+    return render(req, 'user/register.html')
+
+def verify_otp_reg(req):
+    if req.method == 'POST':
+        entered_otp = req.POST['otp'] 
+        stored_otp = req.session.get('otp')
+        email = req.session.get('email')
+        name = req.session.get('name')
+        password = req.session.get('password')
+        if entered_otp == stored_otp:
+            user = User.objects.create_user(first_name=name,email=email,password=password,username=email)
+            user.is_verified = True
+            user.save()      
+            messages.success(req, "Registration successful! You can now log in.")
+            send_mail('User Registration Succesfull', 'Account Created Succesfully And Welcome To chrome ', settings.EMAIL_HOST_USER, [email])
+            return redirect('chrome_login')
+        else:
+            messages.warning(req, "Invalid OTP. Try again.")
+            return redirect('verify_otp_reg')
+
+    return render(req, 'user/verify_code.html')
     
 
 def intro(req):
@@ -544,6 +578,15 @@ from .models import Order  # Assuming you have an Order model
 # Razorpay client setup
 razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
+import razorpay
+from django.conf import settings
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .form import OrderForm
+from .models import Order
+
+razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
 def order_create(request):
     if request.method == 'POST':
         form = OrderForm(request.POST)
@@ -587,6 +630,7 @@ def order_create(request):
         form = OrderForm()
 
     return render(request, 'user/book_product.html', {'form': form})
+
 
 
 
@@ -648,6 +692,18 @@ from django.shortcuts import render, redirect
 from .models import Order, Buy
 import razorpay
 
+from django.shortcuts import render, redirect
+from django.contrib import messages
+from .models import Order, Buy
+import razorpay
+
+from django.shortcuts import render, redirect
+from django.conf import settings
+import razorpay
+from .models import Order, Buy
+
+razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
+
 def payment_view(request, order_id):
     try:
         # Fetch the order from the database using the order_id
@@ -661,20 +717,13 @@ def payment_view(request, order_id):
     except Buy.DoesNotExist:
         buy = None  # If there's no associated Buy object, set it to None
 
-    # Debugging information to check if 'buy' and related data are present
-    print("Buy object:", buy)
-    if buy:
-        print("Product details:", buy.product)
-        print("Quantity:", buy.quantity)
-        print("Total amount:", buy.total_amount)
-
     # Razorpay configuration
-    razorpay_key_id = "your_razorpay_key_id"
+    razorpay_key_id = settings.RAZORPAY_KEY_ID
     razorpay_amount = order.total_amount * 100  # Convert to paise (1 INR = 100 paise)
     razorpay_currency = "INR"
     
     # Create Razorpay order
-    razorpay_client = razorpay.Client(auth=("rzp_test_fGXBbOpWsXJ5K7", "8r97uL39w4etyjunuKYO4tpE"))
+    razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
     razorpay_order = razorpay_client.order.create(dict(
         amount=razorpay_amount,
         currency=razorpay_currency,
@@ -682,6 +731,7 @@ def payment_view(request, order_id):
     ))
 
     context = {
+        'order': order,
         'buy': buy,  # Passing the buy object (which should include the product details)
         'razorpay_key_id': razorpay_key_id,
         'razorpay_amount': razorpay_amount,
@@ -691,6 +741,7 @@ def payment_view(request, order_id):
     }
 
     return render(request, 'user/payment_page.html', context)
+
 
 
 
@@ -718,6 +769,7 @@ from django.http import JsonResponse
 razorpay_client = razorpay.Client(auth=(settings.RAZORPAY_KEY_ID, settings.RAZORPAY_KEY_SECRET))
 
 @csrf_exempt
+
 def payment_success(request):
     if request.method == 'POST':
         try:
@@ -739,17 +791,20 @@ def payment_success(request):
                 
                 # Handle success: Mark the order as paid in the database
                 order = Order.objects.get(razorpay_order_id=order_id)
-                order.payment_status = 'Paid'
+                order.status = 'Paid'  # Update status to 'Paid'
                 order.payment_id = payment_id
+                order.payment_status = 'Paid'  # Assuming payment_status is already a field in Order model
                 order.save()
 
-                # Redirect or render the success page
+                # Redirect to the success page
                 return render(request, 'user/order_success.html', {'order': order})
             
             except razorpay.errors.SignatureVerificationError:
-                return render(request, 'user/order_success.html')
+                messages.error(request, "Payment verification failed. Please try again.")
+                return render(request, 'user/order.html')
         except Exception as e:
-            return render(request, 'user/order_success.html')
+            messages.error(request, f"An error occurred: {str(e)}")
+            return render(request, 'user/error_page.html')
 
 
 
